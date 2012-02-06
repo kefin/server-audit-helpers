@@ -23,7 +23,8 @@ cd "$OLD_PWD"
 
 errors=0
 
-for script in $(find "$mydir" -type f -print | egrep -v "($0|utils|~)$")
+for script in $(find "$mydir" -type f -print \
+    | egrep -v "($0|utils|~)$" | sort)
 do
     if [ -x "$script" ]; then
         echo >&2 "# running $script ..."
