@@ -1,0 +1,77 @@
+#!/bin/sh
+#
+# helper functions for audit scripts
+#
+# * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2012-02-05 kchan
+
+########################################################################
+myname=`basename $0`
+OLD_PWD=$PWD
+cd "`dirname $0`"
+mydir="${PWD%/}"
+cd "$OLD_PWD"
+########################################################################
+
+
+########################################################################
+# helper functions
+########################################################################
+
+error()
+{
+    [ "$1" ] && echo >&2 "###" "$@"
+    exit 1
+}
+
+check_file()
+{
+    [ ! -f "$1" ] && error "$myname - cannot find file: $1"
+}
+
+makedir()
+{
+	[ "$1" ] && {
+		[ ! -d "$1" ] && mkdir -p "$1"
+	}
+}
+
+# notify script is part of the backup-scripts package
+NOTIFY="$(which notify)"
+MAIL="$(which mail)"
+
+notify()
+{
+    email="$1"
+    subject="$2"
+    msgfile="$3"
+    if [ -x "$NOTIFY" ]; then
+        "$NOTIFY" -s "$subject" -f "$msgfile" "$email"
+    else
+        cat "$msgfile" | "$MAIL" -s "$subject" "$email"
+    fi
+}
+
+# function to execute command and send results by email
+# parameters:
+# * command_name
+# * command(s)
+
+run_tool()
+{
+    command_name="$1"
+    command="$2"
+    output_file="$LOG_DIR/${command_name}_$(date '+%Y-%m-%d').log"
+    {
+        echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
+        echo
+        "$command"
+        echo
+        echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
+    } >"$output_file" 2>&1
+    subject="$SUBJECT - ${command_name} output"
+    notify "$EMAIL" "$(date '+%Y-%m-%d') $subject" "$output_file"
+}
+
+########################################################################
+

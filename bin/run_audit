@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# script run audit tools and email results to sysadmin
+#
+# * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2012-02-05 kchan
+#
+# Add to crontab to run script at regular intervals
+#
+# crontab entry to run backup every night @ midnight
+# 0  0   *   *   *       /usr/local/audit/bin/run_audit >> /dev/null 2>&1
+
+########################################################################
+myname=`basename $0`
+OLD_PWD=$PWD
+cd "`dirname $0`"
+mydir="${PWD%/}"
+cd "$OLD_PWD"
+########################################################################
+
+
+### run audit sub-scripts
+
+errors=0
+
+for script in $(find "$mydir" -type f -print | egrep -v "($0|utils|~)$")
+do
+    if [ -x "$script" ]; then
+        echo >&2 "# running $script ..."
+        "$script" || $((errors + 1))
+        echo >&2 "# done."
+    fi
+done
+
+[ "$errors" -eq 0 ] && status=0 || status=1
+
+exit $status
+

@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# configurations for run_audit script
+#
+# * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2012-02-05 kchan
+
+########################################################################
+myname=`basename $0`
+OLD_PWD=$PWD
+cd "`dirname $0`"
+mydir="${PWD%/}"
+cd "$OLD_PWD"
+########################################################################
+
+
+########################################################################
+# configurations for run_audit script
+########################################################################
+
+# email addresses to send reports to
+EMAIL="root"
+
+# email subject
+SUBJECT="$(hostname) audit report"
+
+# audit log directory
+LOG_DIR="$(dirname $mydir)/logs"
+
+# configurations  for lynis
+# * define lynis directory if executable is not installed in standard
+#   location (set this if lynis is installled manually on CentOS).
+LYNIS_DIR=
+# auditor for lynis (should not need to change this)
+AUDITOR="root daily cron job"
+
+########################################################################
+
+
+########################################################################
+# do not modify anything below
+########################################################################
+
+[ ! -d "$LOG_DIR" ] && mkdir -p "$LOG_DIR"
+

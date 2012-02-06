@@ -1,0 +1,99 @@
+#!/bin/sh
+#
+# script install audit scripts to /usr/local/audit
+#
+# * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2012-02-05 kchan
+
+########################################################################
+myname=`basename $0`
+OLD_PWD=$PWD
+cd "`dirname $0`"
+mydir="${PWD%/}"
+cd "$OLD_PWD"
+########################################################################
+
+
+########################################################################
+# helper functions
+########################################################################
+
+error()
+{
+	[ "$1" ] && echo >&2 "###" "$@"
+	exit 1
+}
+
+check_root_user()
+{
+	if [ `id -u` != 0 ]; then
+		error "Script must be run by root."
+	fi	
+}
+
+makedir()
+{
+	[ "$1" ] && {
+		[ ! -d "$1" ] && mkdir -p "$1"
+	}
+}
+
+########################################################################
+
+### set vars
+
+BASE_DIR_NAME="audit"
+DEST_DIR="/usr/local/$BASE_DIR_NAME"
+DIRS="bin conf logs"
+SCRIPTS="\
+    bin/run_audit \
+    bin/utils \
+    bin/lsat \
+    bin/lynis \
+    bin/chkrootkit \
+    bin/rkhunter"
+CONFIG="conf/run_audit.conf conf/run_audit.conf.template"
+
+### check user permissions
+
+check_root_user
+
+
+### install scripts
+
+printf "Do you want to install the backup scripts in $DEST_DIR (Y/N)? "
+read answer
+
+case $answer in
+    y|Y|yes|Yes|YES)
+        ;;
+    n|N|no|No|NO)
+        echo "# Cancelled."
+        exit
+        ;;
+    *)
+        echo "# Unknown answer. Cancelled."
+        exit
+        ;;
+esac
+
+
+makedir "$DEST_DIR"
+echo "# created directory $DEST_DIR"
+
+for d in $DIRS
+do
+    target="${DEST_DIR}/$d"
+    makedir "$target" && \
+    echo "# created directory $target"
+done
+
+for file in $SCRIPTS $CONFIG
+do
+    dst="${DEST_DIR}/$file"
+    cp "${mydir}/$file" "$dst" && \
+        chmod +x "$dst" && \
+        echo "# $file installed as $dst"
+done
+
+exit

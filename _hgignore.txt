@@ -1,0 +1,13 @@
+syntax: glob
+.DS_Store
+*~
+*.pyc
+*_BAK
+*_BACKUP
+*.swp
+*.swn
+*.swo
+*.bak
+tmp/
+workfiles/
+examples/

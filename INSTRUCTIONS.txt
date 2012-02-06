@@ -1,0 +1,45 @@
+#######################################################################
+# audit scripts
+#######################################################################
+
+run_audit
+
+This is a wrapper script to run security tools and email the output to
+system administrators.
+
+
+# HOW TO INSTALL
+
+* unpack tarball into source directory:
+
+cd /usr/local/src/packages
+tar -xvzf audit.tar.gz
+
+* cd into audit tools directory and run install script:
+
+cd audit
+./install-scripts
+
+The script will install the audit scripts in /usr/local/audit/bin.
+
+* edit the configurations file:
+
+cd /usr/local/audit/conf
+vi run_audit.conf
+
+
+# HOW TO USE
+
+* run the top-level wrapper script:
+
+/usr/local/audit/bin/run_audit
+
+* or create a cron task to run the script at regular intervals:
+
+crontab -e
+
+add:
+
+# run security audit tools each night
+0 0 * * *  /usr/local/audit/bin/run_audit
+
