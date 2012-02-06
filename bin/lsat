@@ -30,12 +30,14 @@ run_lsat()
 {
     current_wd=$(pwd)
     cd "$LOG_DIR"
-    "$LSAT" && {
-        if [ -f "lsat.out" ]; then
-            echo "### lsat.out"
-            cat "lsat.out"
-        fi
-    }
+    {
+        "$LSAT" && {
+            if [ -f "lsat.out" ]; then
+                echo "### lsat.out"
+                cat "lsat.out"
+            fi
+        }
+    } 2>&1
     cd "$current_wd"
 }
 
