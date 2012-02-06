@@ -24,8 +24,13 @@ UTILS="$BASE_DIR/bin/utils"
 
 # run rkunter audit
 
+run_rkhunter()
+{
+    "$RKHUNTER" --cronjob --update --rwo && echo "No warnings."
+}
+
 RKHUNTER=$(which rkhunter)
 
 if [ "X$RKHUNTER" != "X" ] && [ -x "$RKHUNTER" ]; then
-    run_tool "rkhunter" "$RKHUNTER"
+    run_tool "rkhunter" "run_rkhunter"
 fi
