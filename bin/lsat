@@ -40,26 +40,5 @@ run_lsat()
 }
 
 if [ "X$LSAT" != "X" ] && [ -x "$LSAT" ]; then
-    command_name="lsat"
-    command="run_lsat"
-    run_tool "$command_name" "$command"
-
-    # output_file="$LOG_DIR/$(basename $LSAT)_$(date '+%Y-%m-%d').log"
-    # {
-    #     echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
-    #     echo
-    #     current_wd=$(pwd)
-    #     cd "$LOG_DIR"
-    #     "$LSAT" && {
-    #         if [ -f "lsat.out" ]; then
-    #             echo "### lsat.out"
-    #             cat "lsat.out"
-    #         fi
-    #     }
-    #     cd "$current_wd"
-    #     echo
-    #     echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
-    # } >"$output_file" 2>&1
-    # subject="$SUBJECT - ${LSAT##*/} output"
-    # notify "$EMAIL" "$(date '+%Y-%m-%d') $subject" "$output_file"
+    run_tool "lsat" "run_lsat"
 fi

@@ -27,18 +27,5 @@ UTILS="$BASE_DIR/bin/utils"
 CHKROOTKIT=$(which chkrootkit)
 
 if [ "X$CHKROOTKIT" != "X" ] && [ -x "$CHKROOTKIT" ]; then
-    command_name="chkrootkit"
-    command="$CHKROOTKIT"
-    run_tool "$command_name" "$command"
-
-    # output_file="$LOG_DIR/$(basename $CHKROOTKIT)_$(date '+%Y-%m-%d').log"
-    # {
-    #     echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
-    #     echo
-    #     "$CHKROOTKIT"
-    #     echo
-    #     echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
-    # } >"$output_file" 2>&1
-    # subject="$SUBJECT - ${CHKROOTKIT##*/} output"
-    # notify "$EMAIL" "$(date '+%Y-%m-%d') $subject" "$output_file"
+    run_tool "chkrootkit" "$CHKROOTKIT"
 fi

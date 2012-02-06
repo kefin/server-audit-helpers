@@ -39,24 +39,5 @@ run_lynis()
 }
 
 if [ "X$LYNIS" != "X" ] && [ -x "$LYNIS" ];  then
-    command_name="lynis"
-    command=run_lynis
-    run_tool "$command_name" "$command"
-    # output_file="$LOG_DIR/$(basename $LYNIS)_$(date '+%Y-%m-%d').log"
-    # {
-    #     echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
-    #     echo
-    #     if [ "X$LYNIS_DIR" != "X" ]; then
-    #         currend_wd=$(pwd)
-    #         cd "$LYNIS_DIR"
-    #         "$LYNIS" -c -Q --auditor "$AUDITOR" --cronjob
-    #         cd "$current_wd"
-    #     else
-    #         "$LYNIS" -c -Q --auditor "$AUDITOR" --cronjob
-    #     fi
-    #     echo
-    #     echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
-    # } >"$output_file" 2>&1
-    # subject="$SUBJECT - ${LYNIS##*/} output"
-    # notify "$EMAIL" "$(date '+%Y-%m-%d') $subject" "$output_file"
+    run_tool "lynis" "run_lynis"
 fi
