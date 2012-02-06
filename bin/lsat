@@ -35,6 +35,7 @@ run_lsat()
     {
         "$LSAT" && {
             if [ -f "lsat.out" ]; then
+                echo
                 echo "$divider"
                 echo "# lsat.out"
                 cat "lsat.out"
