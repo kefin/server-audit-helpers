@@ -31,9 +31,14 @@ check_file()
 
 makedir()
 {
-	[ "$1" ] && {
-		[ ! -d "$1" ] && mkdir -p "$1"
-	}
+    [ "$1" ] && {
+        [ ! -d "$1" ] && mkdir -p "$1"
+    }
+}
+
+check_root_user()
+{
+    [ $(id -u) != 0 ] && error "Script must be run by root."
 }
 
 # notify script is part of the backup-scripts package

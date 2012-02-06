@@ -22,6 +22,8 @@ UTILS="$BASE_DIR/bin/utils"
 . "$CONFIG"
 . "$UTILS"
 
+check_root_user
+
 # run chkrootkit audit
 
 CHKROOTKIT=$(which chkrootkit)

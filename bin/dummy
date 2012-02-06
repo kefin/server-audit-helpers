@@ -22,6 +22,8 @@ UTILS="$BASE_DIR/bin/utils"
 . "$CONFIG"
 . "$UTILS"
 
+check_root_user
+
 # run dummy audit
 
 tmpfile="/tmp/${myname}.$$"
@@ -34,7 +36,6 @@ trap "cleanup" EXIT
 
 echo "LOG_DIR: $LOG_DIR"
 echo "EMAIL: $EMAIL"
-echo "tmpfile: $tmpfile"
 
 subject="test"
 echo "this is a test" > "$tmpfile"
