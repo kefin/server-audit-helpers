@@ -26,6 +26,8 @@ UTILS="$BASE_DIR/bin/utils"
 
 LSAT=$(which lsat)
 
+divider="########################################################################"
+
 run_lsat()
 {
     current_wd=$(pwd)
@@ -33,8 +35,10 @@ run_lsat()
     {
         "$LSAT" && {
             if [ -f "lsat.out" ]; then
-                echo "### lsat.out"
+                echo "$divider"
+                echo "# lsat.out"
                 cat "lsat.out"
+                echo "$divider"
             fi
         }
     } 2>&1
