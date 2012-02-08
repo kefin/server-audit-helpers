@@ -26,9 +26,13 @@ check_root_user
 
 # run rkunter audit
 
+RKHUNTER_LOGFILE="/var/log/rkhunter.log"
+
 run_rkhunter()
 {
-    "$RKHUNTER" --cronjob --update --rwo && echo "No warnings."
+    "$RKHUNTER" --update
+    "$RKHUNTER" --cronjob
+    cat "$RKHUNTER_LOGFILE"
 }
 
 RKHUNTER=$(which rkhunter)
