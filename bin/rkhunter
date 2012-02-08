@@ -30,7 +30,7 @@ RKHUNTER_LOGFILE="/var/log/rkhunter.log"
 
 run_rkhunter()
 {
-    "$RKHUNTER" --update
+    "$RKHUNTER" --update --nocolors --skip-keypress
     "$RKHUNTER" --cronjob
     cat "$RKHUNTER_LOGFILE"
 }
