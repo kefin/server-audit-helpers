@@ -13,6 +13,8 @@ mydir="${PWD%/}"
 cd "$OLD_PWD"
 ########################################################################
 
+PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
+
 # load configurations and helper functions
 
 BASE_DIR="$(dirname $mydir)"
