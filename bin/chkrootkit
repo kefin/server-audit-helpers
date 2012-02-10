@@ -3,7 +3,7 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-05 kchan
+# * updated: 2012-02-10 kchan
 
 ########################################################################
 myname=`basename $0`
@@ -31,5 +31,5 @@ check_root_user
 CHKROOTKIT=$(which chkrootkit)
 
 if [ "X$CHKROOTKIT" != "X" ] && [ -x "$CHKROOTKIT" ]; then
-    run_tool "chkrootkit" "run_chkrootkit"
+    run_tool "chkrootkit" "$CHKROOTKIT"
 fi
