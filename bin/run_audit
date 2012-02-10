@@ -3,7 +3,7 @@
 # script run audit tools and email results to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-05 kchan
+# * updated: 2012-02-10 kchan
 #
 # Add to crontab to run script at regular intervals
 #
@@ -18,19 +18,44 @@ mydir="${PWD%/}"
 cd "$OLD_PWD"
 ########################################################################
 
+errors=0
 
 ### run audit sub-scripts
 
-errors=0
+is_executable()
+{
+    script="$1"
+    [ ! -x "$script" ] && return 0
+    basename=$(basename "$script")
+    case "$basename" in
+        $myname)
+            return 0
+            ;;
+        utils)
+            return 0
+            ;;
+        *~)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
 
-for script in $(find "$mydir" -type f -print \
-    | egrep -v "($0|utils|~)$" | sort)
+run_script()
+{
+    script="$1"
+    echo >&2 "# running $script ..."
+    "$script" || $((errors + 1))
+    echo >&2 "# done."
+}
+
+
+for script in $(find "$mydir" -type f -print | sort)
 do
-    if [ -x "$script" ]; then
-        echo >&2 "# running $script ..."
-        "$script" || $((errors + 1))
-        echo >&2 "# done."
-    fi
+    is_executable "$script"
+    [ $? -eq 1 ] && run_script "$script"
 done
 
 [ "$errors" -eq 0 ] && status=0 || status=1
