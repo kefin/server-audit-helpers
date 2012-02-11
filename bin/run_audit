@@ -22,7 +22,19 @@ errors=0
 
 ### run audit sub-scripts
 
-# function to test if sub-script exists and is executable
+# error function
+
+exec_error()
+{
+    echo "# not an executable audit script: $1" >&2
+    $((errors + 1))
+}
+
+# functions to test if sub-script exists and is executable
+# * is_executable does minimal filtering and checks if script
+#   is executable
+# * is_audit_script checks if script is executable and is
+#   not a backup or utils or dummy.
 
 is_executable()
 {
@@ -30,13 +42,22 @@ is_executable()
     [ ! -x "$script" ] && return 0
     basename=$(basename "$script")
     case "$basename" in
-        $myname)
+        $myname|utils)
             return 0
             ;;
-        utils)
-            return 0
+        *)
+            return 1
             ;;
-        *~)
+    esac
+}
+
+is_audit_script()
+{
+    script="$1"
+    [ ! -x "$script" ] && return 0
+    basename=$(basename "$script")
+    case "$basename" in
+        $myname|utils|dummy|*~)
             return 0
             ;;
         *)
@@ -59,11 +80,13 @@ run_script()
 if [ $# -gt 0 ]; then
 
     # loop through scripts provided as parameters if these exist
+    # * for scripts supplied on the command line we do minimal
+    #   filtering and execute it if it has the executable bit set.
     for script in "$@"
     do
         script="$mydir/$script"
         is_executable "$script"
-        [ $? -eq 1 ] && run_script "$script"
+        [ $? -eq 1 ] && run_script "$script" || exec_error "$script"
     done
 
 else
@@ -71,8 +94,8 @@ else
     # loop through scripts in audit bin directory if no parameters
     for script in $(find "$mydir" -type f -print | sort)
     do
-        is_executable "$script"
-        [ $? -eq 1 ] && run_script "$script"
+        is_audit_script "$script"
+        [ $? -eq 1 ] && run_script "$script" || exec_error "$script"
     done
 
 fi
