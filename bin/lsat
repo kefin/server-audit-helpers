@@ -37,12 +37,13 @@ run_lsat()
     current_wd=$(pwd)
     cd "$LOG_DIR"
     {
+        lsat_output="lsat.out"
         "$LSAT" && {
             if [ -f "lsat.out" ]; then
                 echo
                 echo "$divider"
-                echo "# lsat.out"
-                cat "lsat.out"
+                echo "# lsat_output"
+                cat "$lsat_output"
                 echo "$divider"
             fi
         }
