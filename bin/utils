@@ -3,7 +3,7 @@
 # helper functions for audit scripts
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-05 kchan
+# * updated: 2012-02-11 kchan
 
 ########################################################################
 myname=`basename $0`
@@ -42,7 +42,7 @@ check_root_user()
 }
 
 # notify script is part of the backup-scripts package
-NOTIFY="$(which notify)"
+NOTIFY="/usr/local/bin/notify"
 MAIL="$(which mail)"
 
 notify()
@@ -62,20 +62,46 @@ notify()
 # * command_name
 # * command(s)
 
+DEFAULT_LOG_DIR="/var/log"
+
 run_tool()
 {
     command_name="$1"
     command="$2"
-    output_file="$LOG_DIR/${command_name}_$(date '+%Y-%m-%d').log"
+
+    if [ "X$LOG_DIR" != "X" ]; then
+        log_dir="$LOG_DIR"
+    else
+        log_dir="${DEFAULT_LOG_DIR}/${command_name}"
+    fi
+    log_dir="${log_dir%/}"
+    makedir "$log_dir"
+
+    output_file="$log_dir/${command_name}_$(date '+%Y-%m-%d').log"
+
     {
         echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
         echo
-        "$command"
+        if [ "X$command" != "X" ]; then
+            $command
+        else
+            echo "No command to run."
+        fi
         echo
         echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
     } >"$output_file" 2>&1
-    subject="$SUBJECT - ${command_name} output"
-    notify "$EMAIL" "$(date '+%Y-%m-%d') $subject" "$output_file"
+
+    if [ "X$EMAIL" != "X" ]; then
+        if [ "X$SUBJECT" != "X" ]; then
+            subject="$SUBJECT - ${command_name} output"
+        else
+            subject="${command_name} output"
+        fi
+        for email in $EMAIL
+        do
+            notify "$email" "$(date '+%Y-%m-%d') $subject" "$output_file"
+        done
+    fi
 }
 
 ########################################################################
