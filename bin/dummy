@@ -3,7 +3,7 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-05 kchan
+# * updated: 2012-02-11 kchan
 
 ########################################################################
 myname=`basename $0`
@@ -26,9 +26,11 @@ check_root_user
 
 # run dummy audit
 
-tmpfile="/tmp/${myname}.$$"
+tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
+[ $? -ne 0 ] && error "Can't create temp file, exiting..."
 touch "$tmpfile"
-cleanup() {
+cleanup()
+{
     rm -f $tmpfile
 }
 trap "cleanup" EXIT
