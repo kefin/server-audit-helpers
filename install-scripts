@@ -69,11 +69,11 @@ case $answer in
         ;;
     n|N|no|No|NO)
         echo "# Cancelled."
-        exit
+        exit 1
         ;;
     *)
         echo "# Unknown answer. Cancelled."
-        exit
+        exit 1
         ;;
 esac
 
