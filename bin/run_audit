@@ -95,7 +95,7 @@ else
     for script in $(find "$mydir" -type f -print | sort)
     do
         is_audit_script "$script"
-        [ $? -eq 1 ] && run_script "$script" || exec_error "$script"
+        [ $? -eq 1 ] && run_script "$script"
     done
 
 fi
