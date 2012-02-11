@@ -22,6 +22,8 @@ errors=0
 
 ### run audit sub-scripts
 
+# function to test if sub-script exists and is executable
+
 is_executable()
 {
     script="$1"
@@ -43,6 +45,8 @@ is_executable()
     esac
 }
 
+# function to run sub-script
+
 run_script()
 {
     script="$1"
@@ -54,6 +58,7 @@ run_script()
 
 if [ $# -gt 0 ]; then
 
+    # loop through scripts provided as parameters if these exist
     for script in "$@"
     do
         script="$mydir/$script"
@@ -63,6 +68,7 @@ if [ $# -gt 0 ]; then
 
 else
 
+    # loop through scripts in audit bin directory if no parameters
     for script in $(find "$mydir" -type f -print | sort)
     do
         is_executable "$script"
