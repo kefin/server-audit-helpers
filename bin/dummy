@@ -36,11 +36,10 @@ cleanup()
 trap "cleanup" EXIT
 
 
-command_name="test"
+command_name="dummy"
 output_file="$tmpfile"
-subject="test"
 msg="This is a dummy audit script that sends a test email to \
-the recipients  defined in your run_audit.conf file."
+the recipients defined in your run_audit.conf file."
 
 if [ "X$EMAIL" != "X" ]; then
     {
@@ -48,7 +47,7 @@ if [ "X$EMAIL" != "X" ]; then
         echo "EMAIL: $EMAIL"
         echo
         echo "$msg"
-    } > "$output_file"
+    } >"$output_file"
     if [ "X$SUBJECT" != "X" ]; then
         subject="$SUBJECT - ${command_name} output"
     else
