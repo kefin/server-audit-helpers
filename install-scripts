@@ -48,6 +48,7 @@ DIRS="bin conf logs"
 SCRIPTS="\
     bin/run_audit \
     bin/utils \
+    bin/dummy \
     bin/lsat \
     bin/lynis \
     bin/chkrootkit \

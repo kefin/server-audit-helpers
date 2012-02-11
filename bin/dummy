@@ -36,10 +36,34 @@ cleanup()
 trap "cleanup" EXIT
 
 
-echo "LOG_DIR: $LOG_DIR"
-echo "EMAIL: $EMAIL"
-
+command_name="test"
+output_file="$tmpfile"
 subject="test"
-echo "this is a test" > "$tmpfile"
-notify "$EMAIL" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
+msg="This is a dummy audit script that sends a test email to \
+the recipients  defined in your run_audit.conf file."
+
+if [ "X$EMAIL" != "X" ]; then
+    {
+        echo "LOG_DIR: $LOG_DIR"
+        echo "EMAIL: $EMAIL"
+        echo
+        echo "$msg"
+    } > "$output_file"
+    if [ "X$SUBJECT" != "X" ]; then
+        subject="$SUBJECT - ${command_name} output"
+    else
+        subject="${command_name} output"
+    fi
+    for email in $EMAIL
+    do
+        notify "$email" "$(date '+%Y-%m-%d') $subject" "$output_file"
+    done
+else
+    {
+        echo "LOG_DIR: $LOG_DIR"
+        echo "EMAIL: $EMAIL"
+        echo
+        echo "$msg"
+    } >&2
+fi
 
