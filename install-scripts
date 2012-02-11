@@ -3,7 +3,7 @@
 # script install audit scripts to /usr/local/audit
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-05 kchan
+# * updated: 2012-02-11 kchan
 
 ########################################################################
 myname=`basename $0`
@@ -20,22 +20,22 @@ cd "$OLD_PWD"
 
 error()
 {
-	[ "$1" ] && echo >&2 "###" "$@"
-	exit 1
+    [ "$1" ] && echo >&2 "###" "$@"
+    exit 1
 }
 
 check_root_user()
 {
-	if [ `id -u` != 0 ]; then
-		error "Script must be run by root."
-	fi	
+    if [ `id -u` != 0 ]; then
+        error "Script must be run by root."
+    fi
 }
 
 makedir()
 {
-	[ "$1" ] && {
-		[ ! -d "$1" ] && mkdir -p "$1"
-	}
+    [ "$1" ] && {
+        [ ! -d "$1" ] && mkdir -p "$1"
+    }
 }
 
 ########################################################################
@@ -53,7 +53,8 @@ SCRIPTS="\
     bin/lynis \
     bin/chkrootkit \
     bin/rkhunter"
-CONFIG="conf/run_audit.conf conf/run_audit.conf.template"
+CONFIG_TEMPLATES="conf/run_audit.conf.template"
+CONFIG="conf/run_audit.conf"
 
 ### check user permissions
 
@@ -93,12 +94,20 @@ do
     echo "# created directory $target"
 done
 
-for file in $SCRIPTS $CONFIG
+for file in $SCRIPTS $CONFIG_TEMPLATES
 do
     dst="${DEST_DIR}/$file"
     cp "${mydir}/$file" "$dst" && \
         chmod +x "$dst" && \
         echo "# $file installed as $dst"
 done
+
+# create configuration file if it doesn't exist
+config="${DEST_DIR}/$CONFIG"
+if [ ! -f "$config" ] && [ -f "${config}.template" ]; then
+    cp "${config}.template" "$config"
+    echo "# created configuration file: $config"
+    echo "# please edit according to your server and admin settings"
+fi
 
 exit
