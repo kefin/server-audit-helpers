@@ -39,7 +39,7 @@ run_rkhunter()
 
 RKHUNTER=$(which rkhunter || echo "")
 
-[ "X$RKINDER" != "X" -a -x "$RKHUNTER" ] \
+[ "X$RKHUNTER" != "X" -a -x "$RKHUNTER" ] \
     && run_tool "rkhunter" "run_rkhunter" \
     || echo >&2 "# unable to execute command: rkhunter"
 
