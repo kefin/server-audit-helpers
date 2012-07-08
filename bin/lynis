@@ -28,7 +28,7 @@ check_root_user
 
 # run lynis audit
 
-LYNIS=$(which lynis | echo "")
+LYNIS=$(which lynis || echo "")
 
 run_lynis()
 {
@@ -42,4 +42,7 @@ run_lynis()
     fi
 }
 
-[ "X$LYNIS" != "X" -a -x "$LYNIS" ] && run_tool "lynix" "run_lynis"
+[ "X$LYNIS" != "X" -a -x "$LYNIS" ] \
+    && run_tool "lynix" "run_lynis" \
+    || echo >&2 "# unable to execute command: lynis"
+

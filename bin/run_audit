@@ -20,15 +20,39 @@ mydir=${PWD%/}
 cd "$OLD_PWD"
 ########################################################################
 
-errors=0
 
-### run audit sub-scripts
+########################################################################
+# helper functions
+
+usage()
+{
+    cat <<EOF
+# Script to run audit tools and email reports to sysadmin
+#
+# Usage: $myname scripts
+#   -h    # display usage
+#
+EOF
+    exit 1
+}
+
+error()
+{
+    [ "$1" ] && echo >&2 "###" "$@"
+    exit 1
+}
+
+
+########################################################################
+# run audit sub-scripts
+
+errors=0
 
 # error function
 
 exec_error()
 {
-    echo "# not an executable audit script: $1" >&2
+    echo >&2 "# script error: $1"
     $((errors + 1))
 }
 
@@ -72,19 +96,42 @@ run_script()
 {
     local script="$1"
     echo >&2 "# running $script ..."
-    "$script" || $((errors + 1))
+    "$script"
     echo >&2 "# done."
 }
 
 
-if [ $# -gt 0 ]; then
+# parse parameters
+
+debug=0
+scripts=
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        -*|-help|--help)
+            usage
+            ;;
+        *)
+            if [ ! -f "${mydir}/$1" ]; then
+                error "Script not found: ${mydir}/$1"
+            fi
+            scripts="$scripts $1"
+            ;;
+    esac
+    shift
+done
+
+
+if [ "X$scripts" != "X" ]; then
 
     # loop through scripts provided as parameters if these exist
     # * for scripts supplied on the command line we do minimal
     #   filtering and execute it if it has the executable bit set.
-    for script in "$@"
+
+    for s in $scripts
     do
-        script="${mydir}/${script}"
+        script="${mydir}/${s}"
         [ $(is_executable "$script") -eq 1 ] \
             && run_script "$script" \
             || exec_error "$script"
@@ -93,9 +140,12 @@ if [ $# -gt 0 ]; then
 else
 
     # loop through scripts in audit bin directory if no parameters
+
     for script in $(find "$mydir" -type f -print | sort)
     do
-        [ $(is_audit_script "$script") -eq 1 ] && run_script "$script"
+        [ $(is_audit_script "$script") -eq 1 ] \
+            && run_script "$script" \
+            || exec_error "$script"
     done
 
 fi

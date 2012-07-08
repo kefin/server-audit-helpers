@@ -28,6 +28,8 @@ check_root_user
 
 # run chkrootkit audit
 
-CHKROOTKIT=$(which chkrootkit | echo "")
+CHKROOTKIT=$(which chkrootkit || echo "")
 
-[ "X$CHKROOTKIT" != "X" -a -x "$CHKROOTKIT" ] && run_tool "chkrootkit" "$CHKROOTKIT"
+[ "X$CHKROOTKIT" != "X" -a -x "$CHKROOTKIT" ] \
+    && run_tool "chkrootkit" "$CHKROOTKIT" \
+    || echo >&2 "# unable to execute command: chkrootkit"

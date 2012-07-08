@@ -61,7 +61,7 @@ notify()
 # * command_name
 # * command(s)
 
-DEFAULT_LOG_DIR="/var/log"
+DEFAULT_LOG_DIR="/var/log/audit"
 
 run_tool()
 {
