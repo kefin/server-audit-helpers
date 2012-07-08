@@ -61,6 +61,7 @@ notify()
 # * command_name
 # * command(s)
 
+DIVIDER="########################################################################"
 DEFAULT_LOG_DIR="/var/log/audit"
 
 run_tool()
@@ -78,9 +79,11 @@ run_tool()
     log_dir="${log_dir%/}"
     makedir "$log_dir"
 
-    local output_file="$log_dir/${command_name}_$(date '+%Y-%m-%d').log"
+    #local output_file="$log_dir/${command_name}_$(date '+%Y-%m-%d').log"
+    local output_file="$log_dir/${command_name}.log"
 
     {
+        echo $DIVIDER
         echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
         echo
         if [ "X$command" != "X" ]; then
@@ -90,6 +93,8 @@ run_tool()
         fi
         echo
         echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
+        echo $DIVIDER
+        echo
     } >"$output_file" 2>&1
 
     if [ "X$EMAIL" != "X" ]; then
