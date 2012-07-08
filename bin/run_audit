@@ -1,9 +1,11 @@
 #!/bin/sh
 #
+# run_audit
+#
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-11 kchan
+# * updated: 2012-07-08 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -11,10 +13,10 @@
 # 0 0 * * * /usr/local/audit/bin/run_audit >> /dev/null 2>&1
 
 ########################################################################
-myname=`basename $0`
+myname=$(basename "$0")
 OLD_PWD=$PWD
-cd "`dirname $0`"
-mydir="${PWD%/}"
+cd $(dirname "$0")
+mydir=${PWD%/}
 cd "$OLD_PWD"
 ########################################################################
 
@@ -38,30 +40,28 @@ exec_error()
 
 is_executable()
 {
-    script="$1"
-    [ ! -x "$script" ] && return 0
-    basename=$(basename "$script")
-    case "$basename" in
+    local script="$1"
+    [ -x "$script" ] || echo 0
+    case $(basename "$script") in
         $myname|utils)
-            return 0
+            echo 0
             ;;
         *)
-            return 1
+            echo 1
             ;;
     esac
 }
 
 is_audit_script()
 {
-    script="$1"
-    [ ! -x "$script" ] && return 0
-    basename=$(basename "$script")
-    case "$basename" in
+    local script="$1"
+    [ -x "$script" ] || echo 0
+    case $(basename "$script") in
         $myname|utils|dummy|*~)
-            return 0
+            echo 0
             ;;
         *)
-            return 1
+            echo 1
             ;;
     esac
 }
@@ -70,7 +70,7 @@ is_audit_script()
 
 run_script()
 {
-    script="$1"
+    local script="$1"
     echo >&2 "# running $script ..."
     "$script" || $((errors + 1))
     echo >&2 "# done."
@@ -84,9 +84,10 @@ if [ $# -gt 0 ]; then
     #   filtering and execute it if it has the executable bit set.
     for script in "$@"
     do
-        script="$mydir/$script"
-        is_executable "$script"
-        [ $? -eq 1 ] && run_script "$script" || exec_error "$script"
+        script="${mydir}/${script}"
+        [ $(is_executable "$script") -eq 1 ] \
+            && run_script "$script" \
+            || exec_error "$script"
     done
 
 else
@@ -94,8 +95,7 @@ else
     # loop through scripts in audit bin directory if no parameters
     for script in $(find "$mydir" -type f -print | sort)
     do
-        is_audit_script "$script"
-        [ $? -eq 1 ] && run_script "$script"
+        [ $(is_audit_script "$script") -eq 1 ] && run_script "$script"
     done
 
 fi
@@ -103,4 +103,3 @@ fi
 [ "$errors" -eq 0 ] && status=0 || status=1
 
 exit $status
-

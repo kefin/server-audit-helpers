@@ -3,17 +3,17 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-10 kchan
-
-########################################################################
-myname=`basename $0`
-OLD_PWD=$PWD
-cd "`dirname $0`"
-mydir="${PWD%/}"
-cd "$OLD_PWD"
-########################################################################
+# * updated: 2012-07-08 kchan
 
 PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
+
+########################################################################
+myname=$(basename "$0")
+OLD_PWD=$PWD
+cd $(dirname "$0")
+mydir=${PWD%/}
+cd "$OLD_PWD"
+########################################################################
 
 # load configurations and helper functions
 
@@ -37,8 +37,6 @@ run_rkhunter()
     cat "$RKHUNTER_LOGFILE"
 }
 
-RKHUNTER=$(which rkhunter)
+RKHUNTER=$(which rkhunter | echo "")
 
-if [ "X$RKHUNTER" != "X" ] && [ -x "$RKHUNTER" ]; then
-    run_tool "rkhunter" "run_rkhunter"
-fi
+[ "X$RKINDER" != "X" -a -x "$RKHUNTER" ] && run_tool "rkhunter" "run_rkhunter"

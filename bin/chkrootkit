@@ -3,13 +3,13 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-10 kchan
+# * updated: 2012-07-08 kchan
 
 ########################################################################
-myname=`basename $0`
+myname=$(basename "$0")
 OLD_PWD=$PWD
-cd "`dirname $0`"
-mydir="${PWD%/}"
+cd $(dirname "$0")
+mydir=${PWD%/}
 cd "$OLD_PWD"
 ########################################################################
 
@@ -28,8 +28,6 @@ check_root_user
 
 # run chkrootkit audit
 
-CHKROOTKIT=$(which chkrootkit)
+CHKROOTKIT=$(which chkrootkit | echo "")
 
-if [ "X$CHKROOTKIT" != "X" ] && [ -x "$CHKROOTKIT" ]; then
-    run_tool "chkrootkit" "$CHKROOTKIT"
-fi
+[ "X$CHKROOTKIT" != "X" -a -x "$CHKROOTKIT" ] && run_tool "chkrootkit" "$CHKROOTKIT"

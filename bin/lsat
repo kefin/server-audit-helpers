@@ -3,13 +3,13 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-10 kchan
+# * updated: 2012-07-08 kchan
 
 ########################################################################
-myname=`basename $0`
+myname=$(basename "$0")
 OLD_PWD=$PWD
-cd "`dirname $0`"
-mydir="${PWD%/}"
+cd $(dirname "$0")
+mydir=${PWD%/}
 cd "$OLD_PWD"
 ########################################################################
 
@@ -28,7 +28,7 @@ check_root_user
 
 # run lsat audit
 
-LSAT=$(which lsat)
+LSAT=$(which lsat | echo "")
 
 divider="########################################################################"
 
@@ -51,6 +51,4 @@ run_lsat()
     cd "$current_wd"
 }
 
-if [ "X$LSAT" != "X" ] && [ -x "$LSAT" ]; then
-    run_tool "lsat" "run_lsat"
-fi
+[ "X$LSAT" != "X" -a -x "$LSAT" ] && run_tool "lsat" "run_lsat"

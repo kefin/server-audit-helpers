@@ -3,13 +3,13 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-02-11 kchan
+# * updated: 2012-07-08 kchan
 
 ########################################################################
-myname=`basename $0`
+myname=$(basename "$0")
 OLD_PWD=$PWD
-cd "`dirname $0`"
-mydir="${PWD%/}"
+cd $(dirname "$0")
+mydir=${PWD%/}
 cd "$OLD_PWD"
 ########################################################################
 
@@ -65,4 +65,3 @@ else
         echo "$msg"
     } >&2
 fi
-
