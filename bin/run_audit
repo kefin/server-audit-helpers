@@ -113,9 +113,8 @@ do
             usage
             ;;
         *)
-            if [ ! -f "${mydir}/$1" ]; then
-                error "Script not found: ${mydir}/$1"
-            fi
+            s="${mydir}/$1"
+            [ ! -f "$s" ] && error "Script not found: $s"
             scripts="$scripts $1"
             ;;
     esac
@@ -143,9 +142,7 @@ else
 
     for script in $(find "$mydir" -type f -print | sort)
     do
-        [ $(is_audit_script "$script") -eq 1 ] \
-            && run_script "$script" \
-            || exec_error "$script"
+        [ $(is_audit_script "$script") -eq 1 ] && run_script "$script"
     done
 
 fi
