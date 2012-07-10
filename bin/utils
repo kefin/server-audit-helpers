@@ -5,7 +5,7 @@
 # helper functions for audit scripts
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-07-08 kchan
+# * updated: 2012-07-10 kchan
 
 ########################################################################
 myname=$(basename "$0")
@@ -56,6 +56,18 @@ notify()
     fi
 }
 
+# create temp file
+
+tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
+[ $? -ne 0 ] && error "Can't create temp file, exiting..."
+touch "$tmpfile"
+cleanup()
+{
+    rm -f "$tmpfile"
+}
+trap "cleanup" EXIT
+
+
 # function to execute command and send results by email
 # parameters:
 # * command_name
@@ -78,9 +90,7 @@ run_tool()
     fi
     log_dir="${log_dir%/}"
     makedir "$log_dir"
-
-    #local output_file="$log_dir/${command_name}_$(date '+%Y-%m-%d').log"
-    local output_file="$log_dir/${command_name}.log"
+    local logfile="$log_dir/${command_name}.log"
 
     {
         echo $DIVIDER
@@ -95,7 +105,7 @@ run_tool()
         echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
         echo $DIVIDER
         echo
-    } >"$output_file" 2>&1
+    } > "$tmpfile" 2>&1
 
     if [ "X$EMAIL" != "X" ]; then
         if [ "X$SUBJECT" != "X" ]; then
@@ -105,7 +115,9 @@ run_tool()
         fi
         for email in $EMAIL
         do
-            notify "$email" "$(date '+%Y-%m-%d') $subject" "$output_file"
+            notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
         done
     fi
+
+    cat "$tmpfile" >> "$logfile"
 }
