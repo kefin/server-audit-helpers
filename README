@@ -7,6 +7,20 @@ run_audit
 This is a wrapper script to run security tools and email the output to
 system administrators.
 
+The package includes wrapper sub-scripts (located in the packages's
+"bin" subdirectory) to run the following security tools:
+
+* chkrootkit
+* lynis
+* lsat
+* rkhunter
+* tripwire
+
+A "dummy" script template is included as an example of how to create a
+new sub-script to use with the main "run_audit" script.
+
+IMPORTANT: The security tools must be already installed on your server for
+the wrapper scripts to work.
 
 ########################################################################
 # HOW TO INSTALL
@@ -16,7 +30,7 @@ system administrators.
 cd /usr/local/src/packages
 tar -xvzf audit.tar.gz
 
-* cd into audit tools directory and run install script:
+* cd into audit tools directory and run the install script:
 
 cd audit
 ./install-scripts
@@ -44,6 +58,8 @@ vi run_audit.conf
 ########################################################################
 # HOW TO USE
 
+* the "run_audit" script must be run by root.
+
 * run the top-level wrapper script:
 
 /usr/local/audit/bin/run_audit
@@ -56,3 +72,22 @@ add:
 
 # run security audit tools each night
 0 0 * * *  /usr/local/audit/bin/run_audit
+
+* or run using the "at" daemon:
+
+at 12am
+/usr/local/audit/bin/run_audit
+CTRL-D
+
+* to execute individual tools:
+
+/usr/local/audit/bin/run_audit chkrootkit
+/usr/local/audit/bin/run_audit tripwire
+etc.
+
+
+########################################################################
+# CONTACT
+
+If you have questions about this package, please contact Kevin Chan at
+<kefin@makedostudio.com>.
