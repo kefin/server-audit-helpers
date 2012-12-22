@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# wrapper sub-script to run security tool
+#
+# * created: 2012-12-21 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2012-12-21 kchan
+
+PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
+
+########################################################################
+myname=$(basename "$0")
+OLD_PWD=$PWD
+cd $(dirname "$0")
+mydir=${PWD%/}
+cd "$OLD_PWD"
+########################################################################
+
+# load configurations and helper functions
+
+BASE_DIR="$(dirname $mydir)"
+CONFIG="$BASE_DIR/conf/run_audit.conf"
+UTILS="$BASE_DIR/bin/utils"
+
+. "$CONFIG"
+. "$UTILS"
+
+check_root_user
+
+# run tripwire audit
+
+TRIPWIRE=$(which tripwire || echo "")
+LOGFILE="/var/log/tripwire.log"
+TOOL="tripwire"
+
+run_tripwire()
+{
+    "$TRIPWIRE" --check --email-report 2>&1 >"$LOGFILE"
+    cat "$LOGFILE"
+}
+
+[ "X$TRIPWIRE" != "X" -a -x "$TRIPWIRE" ] \
+    && run_tool "$TOOL" "run_${TOOL}" \
+    || echo >&2 "# unable to execute command: $TOOL"
