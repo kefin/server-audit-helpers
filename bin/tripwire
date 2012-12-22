@@ -26,18 +26,16 @@ UTILS="$BASE_DIR/bin/utils"
 
 check_root_user
 
-# run tripwire audit
+# run security tool
 
-TRIPWIRE=$(which tripwire || echo "")
-LOGFILE="/var/log/tripwire.log"
 TOOL="tripwire"
+TRIPWIRE=$(which "$TOOL" || echo "")
 
 run_tripwire()
 {
-    "$TRIPWIRE" --check --email-report 2>&1 >"$LOGFILE"
-    cat "$LOGFILE"
+    "$TRIPWIRE" --check --quiet --email-report
 }
 
 [ "X$TRIPWIRE" != "X" -a -x "$TRIPWIRE" ] \
-    && run_tool "$TOOL" "run_${TOOL}" \
+    && run_tool "$TOOL" "run_${TOOL}" "--quiet" \
     || echo >&2 "# unable to execute command: $TOOL"
