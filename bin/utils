@@ -5,7 +5,7 @@
 # helper functions for audit scripts
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-07-10 kchan
+# * updated: 2012-12-21 kchan
 
 ########################################################################
 myname=$(basename "$0")
@@ -58,66 +58,107 @@ notify()
 
 # create temp file
 
-tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
-[ $? -ne 0 ] && error "Can't create temp file, exiting..."
-touch "$tmpfile"
-cleanup()
+create_tmpfile()
 {
-    rm -f "$tmpfile"
+    local tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
+    [ $? -ne 0 ] && error "Can't create temp file, exiting..."
+    touch "$tmpfile"
+    cleanup()
+    {
+        rm -f "$tmpfile"
+    }
+    trap "cleanup" EXIT
+    echo "$tmpfile"
 }
-trap "cleanup" EXIT
 
 
 # function to execute command and send results by email
 # parameters:
 # * command_name
 # * command(s)
+# * options:
+#     --no-log   # do not create log
+#     --no-email # do not email log
+#     --quiet    # do not create log and do not send email report
+#                # --quiet is equivalent to --no-log --no-email
 
 DIVIDER="########################################################################"
 DEFAULT_LOG_DIR="/var/log/audit"
 
 run_tool()
 {
-    local command_name="$1"
-    local command="$2"
+    local command_name="$1"; shift
+    local command="$1"; shift
     local log_dir=
     local subject=
+    local no_log=0
+    local no_email=0
 
-    if [ "X$LOG_DIR" != "X" ]; then
-        log_dir="$LOG_DIR"
-    else
-        log_dir="${DEFAULT_LOG_DIR}/${command_name}"
-    fi
-    log_dir="${log_dir%/}"
-    makedir "$log_dir"
-    local logfile="$log_dir/${command_name}.log"
+    while [ $# -gt 0 ]
+    do
+        case "$1" in
+            --quiet)
+                no_log=1
+                no_email=1
+                ;;
+            --no-log)
+                no_log=1
+                ;;
+            --no-email)
+                no_email=1
+                ;;
+            *)
+                ;;
+        esac
+        shift
+    done
 
-    {
-        echo $DIVIDER
-        echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
-        echo
+    if [ $no_log -ne 0 -a $no_email -ne 0 ]; then
         if [ "X$command" != "X" ]; then
             $command
         else
-            echo "No command to run."
+            echo >&2 "No command to run."
         fi
-        echo
-        echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
-        echo $DIVIDER
-        echo
-    } > "$tmpfile" 2>&1
-
-    if [ "X$EMAIL" != "X" ]; then
-        if [ "X$SUBJECT" != "X" ]; then
-            subject="$SUBJECT - ${command_name} output"
-        else
-            subject="${command_name} output"
-        fi
-        for email in $EMAIL
-        do
-            notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
-        done
+    else
+        local tmpfile=$(create_tmpfile)
+        {
+            echo $DIVIDER
+            echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
+            echo
+            if [ "X$command" != "X" ]; then
+                $command
+            else
+                echo "No command to run."
+            fi
+            echo
+            echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
+            echo $DIVIDER
+            echo
+        } >"$tmpfile" 2>&1
     fi
 
-    cat "$tmpfile" >> "$logfile"
+    if [ $no_log -eq 0 ]; then
+        if [ "X$LOG_DIR" != "X" ]; then
+            log_dir="$LOG_DIR"
+        else
+            log_dir="${DEFAULT_LOG_DIR}/${command_name}"
+        fi
+        log_dir="${log_dir%/}"
+        makedir "$log_dir"
+        cat "$tmpfile" >>"$log_dir/${command_name}.log"
+    fi
+
+    if [ $no_email -eq 0 ]; then
+        if [ "X$EMAIL" != "X" ]; then
+            if [ "X$SUBJECT" != "X" ]; then
+                subject="$SUBJECT - ${command_name} output"
+            else
+                subject="${command_name} output"
+            fi
+            for email in $EMAIL
+            do
+                notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
+            done
+        fi
+    fi
 }
