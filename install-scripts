@@ -3,7 +3,7 @@
 # script install audit scripts to /usr/local/audit
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-07-08 kchan
+# * updated: 2012-12-21 kchan
 
 ########################################################################
 myname=$(basename "$0")
@@ -25,9 +25,7 @@ error()
 
 check_root_user()
 {
-    if [ `id -u` != 0 ]; then
-        error "Script must be run by root."
-    fi
+    [ $(id -u) = 0 ] || error "Script must be run by root."
 }
 
 makedir()
@@ -40,9 +38,10 @@ makedir()
 
 ### set vars
 
+SRC_DIR="$mydir"
 BASE_DIR_NAME="audit"
-DEST_DIR="/usr/local/$BASE_DIR_NAME"
-DIRS="bin conf logs"
+DST_DIR="/usr/local/$BASE_DIR_NAME"
+DIRS="bin conf"
 SCRIPTS="\
     bin/run_audit \
     bin/utils \
@@ -50,9 +49,11 @@ SCRIPTS="\
     bin/lsat \
     bin/lynis \
     bin/chkrootkit \
-    bin/rkhunter"
+    bin/rkhunter \
+    bin/tripwire"
 CONFIG_TEMPLATES="conf/run_audit.conf.template"
 CONFIG="conf/run_audit.conf"
+SCRIPT_PERMS="700"
 
 
 ### check user permissions
@@ -65,7 +66,7 @@ check_root_user
 if [ $# -eq 1 ]; then
     answer="$1"
 else
-    printf "Do you want to install the backup scripts in $DEST_DIR (Y/N)? "
+    printf "Do you want to install the backup scripts in $DST_DIR (Y/N)? "
     read answer
 fi
 
@@ -83,28 +84,28 @@ case $answer in
 esac
 
 
-makedir "$DEST_DIR"
-echo "# created directory $DEST_DIR"
+makedir "$DST_DIR"
+echo "# created directory $DST_DIR"
 
 for d in $DIRS
 do
-    target="${DEST_DIR}/$d"
+    target="${DST_DIR}/$d"
     makedir "$target" && \
     echo "# created directory $target"
 done
 
 for file in $SCRIPTS $CONFIG_TEMPLATES
 do
-    dst="${DEST_DIR}/$file"
-    cp "${mydir}/$file" "$dst" && \
-        chmod +x "$dst" && \
-        echo "# $file installed as $dst"
+    src="${SRC_DIR}/$file"
+    dst="${DST_DIR}/$file"
+    install -m "$SCRIPT_PERMS" "$src" "$dst" \
+        && echo "# $file installed as $dst"
 done
 
 # create configuration file if it doesn't exist
-config="${DEST_DIR}/$CONFIG"
+config="${DST_DIR}/$CONFIG"
 if [ ! -f "$config" ] && [ -f "${config}.template" ]; then
-    cp "${config}.template" "$config"
+    install "${config}.template" "$config"
     echo "# created configuration file: $config"
     echo "# please edit according to your server and admin settings"
 fi
