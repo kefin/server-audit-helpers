@@ -83,6 +83,7 @@ CTRL-D
 
 /usr/local/audit/bin/run_audit chkrootkit
 /usr/local/audit/bin/run_audit tripwire
+/usr/local/audit/bin/run_audit chkrootkit rkhunter tripwire
 etc.
 
 
