@@ -3,7 +3,7 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-07-08 kchan
+# * updated: 2012-12-21 kchan
 
 ########################################################################
 myname=$(basename "$0")
@@ -24,44 +24,37 @@ UTILS="$BASE_DIR/bin/utils"
 
 check_root_user
 
-# run dummy audit
+# run tool
 
-tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
-[ $? -ne 0 ] && error "Can't create temp file, exiting..."
-touch "$tmpfile"
-cleanup()
+TOOL="email_config"
+output_file="$(create_tmpfile)"
+
+message()
 {
-    rm -f $tmpfile
+    echo "LOG_DIR: $LOG_DIR"
+    echo "EMAIL: $EMAIL"
+    echo "
+This is a dummy audit script template that sends a test email to the
+recipients defined in your run_audit.conf file.
+
+"
+    echo "Configuration: $CONFIG"
+    echo
+    cat "$CONFIG"
+    echo
 }
-trap "cleanup" EXIT
-
-
-command_name="dummy"
-output_file="$tmpfile"
-msg="This is a dummy audit script that sends a test email to \
-the recipients defined in your run_audit.conf file."
 
 if [ "X$EMAIL" != "X" ]; then
-    {
-        echo "LOG_DIR: $LOG_DIR"
-        echo "EMAIL: $EMAIL"
-        echo
-        echo "$msg"
-    } >"$output_file"
+    message >"$output_file"
     if [ "X$SUBJECT" != "X" ]; then
-        subject="$SUBJECT - ${command_name} output"
+        subject="$SUBJECT - ${TOOL} output"
     else
-        subject="${command_name} output"
+        subject="${TOOL} output"
     fi
     for email in $EMAIL
     do
         notify "$email" "$(date '+%Y-%m-%d') $subject" "$output_file"
     done
 else
-    {
-        echo "LOG_DIR: $LOG_DIR"
-        echo "EMAIL: $EMAIL"
-        echo
-        echo "$msg"
-    } >&2
+    message >&2
 fi
