@@ -63,7 +63,6 @@ create_tmpfile()
     local tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
     [ $? -ne 0 ] && error "Can't create temp file, exiting..."
     touch "$tmpfile"
-    trap "rm -f $tmpfile" EXIT
     echo "$tmpfile"
 }
 
@@ -117,6 +116,7 @@ run_tool()
         fi
     else
         local tmpfile=$(create_tmpfile)
+        trap "rm -f $tmpfile" EXIT
         {
             echo $DIVIDER
             echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
