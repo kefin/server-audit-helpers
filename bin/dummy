@@ -3,7 +3,7 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-12-22 kchan
+# * updated: 2012-12-23 kchan
 
 ########################################################################
 myname=$(basename "$0")
@@ -16,8 +16,9 @@ cd "$OLD_PWD"
 # load configurations and helper functions
 
 BASE_DIR="$(dirname $mydir)"
-CONFIG="$BASE_DIR/conf/run_audit.conf"
-UTILS="$BASE_DIR/bin/utils"
+CONFIG_DIR="/etc/audit"
+CONFIG="${CONFIG_DIR}/run_audit.conf"
+UTILS="${BASE_DIR}/bin/utils"
 
 . "$CONFIG"
 . "$UTILS"

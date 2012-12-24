@@ -1,9 +1,11 @@
 #!/bin/sh
 #
-# script install audit scripts to /usr/local/audit
+# installation script for audit helpers
+# * script are installed in /usr/local/audit/bin
+# * configuration files are installed in /etc/audit
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-12-21 kchan
+# * updated: 2012-12-23 kchan
 
 ########################################################################
 myname=$(basename "$0")
@@ -38,22 +40,27 @@ makedir()
 
 ### set vars
 
+PACKAGE_NAME="audit"
 SRC_DIR="$mydir"
-BASE_DIR_NAME="audit"
-DST_DIR="/usr/local/$BASE_DIR_NAME"
-DIRS="bin conf"
+SCRIPT_SRC_DIR="${SRC_DIR}/bin"
+CONFIG_SRC_DIR="${SRC_DIR}/conf"
+SCRIPT_DST_DIR="/usr/local/${PACKAGE_NAME}/bin"
+CONFIG_DST_DIR="/etc/${PACKAGE_NAME}"
+INSTALL_DIRS="$SCRIPT_DST_DIR $CONFIG_DST_DIR"
 SCRIPTS="\
-    bin/run_audit \
-    bin/utils \
-    bin/dummy \
-    bin/lsat \
-    bin/lynis \
-    bin/chkrootkit \
-    bin/rkhunter \
-    bin/tripwire"
-CONFIG_TEMPLATES="conf/run_audit.conf.template"
-CONFIG="conf/run_audit.conf"
+    run_audit \
+    utils \
+    dummy \
+    lsat \
+    lynis \
+    chkrootkit \
+    rkhunter \
+    tripwire"
+TEMPLATE_SUFFIX=".template"
+CONFIG_TEMPLATES="run_audit.conf${TEMPLATE_SUFFIX}"
+CONFIGS="run_audit.conf"
 SCRIPT_PERMS="700"
+CONFIG_PERMS="600"
 
 
 ### check user permissions
@@ -71,9 +78,9 @@ else
 fi
 
 case $answer in
-    y|Y|yes|Yes|YES)
+    [Yy]|[Yy][Ee][Ss]|-[Yy]|-[Yy][Ee][Ss]|--[Yy][Ee][Ss])
         ;;
-    n|N|no|No|NO)
+    [Nn]|[Nn][Oo]|-[Nn]|-[Nn][Oo]|--[Nn][Oo])
         echo "# Cancelled."
         exit 1
         ;;
@@ -84,30 +91,51 @@ case $answer in
 esac
 
 
-makedir "$DST_DIR"
-echo "# created directory $DST_DIR"
+errors=0
 
-for d in $DIRS
+for d in $INSTALL_DIRS
 do
-    target="${DST_DIR}/$d"
-    makedir "$target" && \
-    echo "# created directory $target"
+    if [ ! -d "$d" ]; then
+        makedir "$d"
+        echo "# Created directory $d"
+    fi
 done
 
-for file in $SCRIPTS $CONFIG_TEMPLATES
+for file in $SCRIPTS
 do
-    src="${SRC_DIR}/$file"
-    dst="${DST_DIR}/$file"
+    src="${SCRIPT_SRC_DIR}/$file"
+    dst="${SCRIPT_DST_DIR}/$file"
     install -m "$SCRIPT_PERMS" "$src" "$dst" \
         && echo "# $file installed as $dst"
 done
 
-# create configuration file if it doesn't exist
-config="${DST_DIR}/$CONFIG"
-if [ ! -f "$config" ] && [ -f "${config}.template" ]; then
-    install "${config}.template" "$config"
-    echo "# created configuration file: $config"
-    echo "# please edit according to your server and admin settings"
-fi
+for file in $CONFIG_TEMPLATES
+do
+    src="${CONFIG_SRC_DIR}/$file"
+    dst="${CONFIG_DST_DIR}/$file"
+    install -m "$CONFIG_PERMS" "$src" "$dst" \
+        && echo "# $file installed as $dst"
+done
 
-exit
+
+# create configuration file if it doesn't exist
+
+for file in $CONFIGS
+do
+    src="${CONFIG_SRC_DIR}/$file}${TEMPLATE_SUFFIX}"
+    dst="${CONFIG_DST_DIR}/$file"
+    if [ ! -f "$src" ]; then
+        echo >&2 "### Cannot find configuration template: $src"
+        errors=$((errors + 1))
+    else
+        if [ ! -f "$dst" ]; then
+            install -m "$CONFIG_PERMS" "$src" "$dst" \
+                && {
+                    echo "# Created configuration file:  $dst"
+                    echo "# Please edit according to your settings."
+                }
+        fi
+    fi
+done
+
+exit $errors

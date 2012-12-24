@@ -3,7 +3,7 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-12-21 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-12-21 kchan
+# * updated: 2012-12-23 kchan
 
 PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
@@ -18,8 +18,9 @@ cd "$OLD_PWD"
 # load configurations and helper functions
 
 BASE_DIR="$(dirname $mydir)"
-CONFIG="$BASE_DIR/conf/run_audit.conf"
-UTILS="$BASE_DIR/bin/utils"
+CONFIG_DIR="/etc/audit"
+CONFIG="${CONFIG_DIR}/run_audit.conf"
+UTILS="${BASE_DIR}/bin/utils"
 
 . "$CONFIG"
 . "$UTILS"
