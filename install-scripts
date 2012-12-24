@@ -122,8 +122,8 @@ done
 
 for file in $CONFIGS
 do
-    src="${CONFIG_SRC_DIR}/$file}${TEMPLATE_SUFFIX}"
-    dst="${CONFIG_DST_DIR}/$file"
+    src="${CONFIG_SRC_DIR}/${file}${TEMPLATE_SUFFIX}"
+    dst="${CONFIG_DST_DIR}/${file}"
     if [ ! -f "$src" ]; then
         echo >&2 "### Cannot find configuration template: $src"
         errors=$((errors + 1))
