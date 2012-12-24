@@ -39,7 +39,7 @@ The script will install the audit scripts in /usr/local/audit/bin.
 
 * edit the configurations file:
 
-cd /usr/local/audit/conf
+cd /etc/audit
 vi run_audit.conf
 
 * add to /etc/logrotate.d/audit:
