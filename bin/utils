@@ -108,7 +108,7 @@ run_tool()
         shift
     done
 
-    if [ $no_log -ne 0 -a $no_email -ne 0 ]; then
+    if [ $no_log -ne 0 ] && [ $no_email -ne 0 ]; then
         if [ "X$command" != "X" ]; then
             $command
         else
