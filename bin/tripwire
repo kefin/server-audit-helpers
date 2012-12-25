@@ -34,7 +34,7 @@ TRIPWIRE=$(which "$TOOL" || echo "")
 
 run_tripwire()
 {
-    "$TRIPWIRE" --check --quiet --email-report
+    "$TRIPWIRE" --check --quiet --email-report 2>/dev/null 1>&2
 }
 
 [ "X$TRIPWIRE" != "X" -a -x "$TRIPWIRE" ] \
