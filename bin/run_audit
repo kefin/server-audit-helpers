@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-07-08 kchan
+# * updated: 2013-02-25 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -142,7 +142,8 @@ else
 
     for script in $(find "$mydir" -type f -print | sort)
     do
-        [ $(is_audit_script "$script") -eq 1 ] && run_script "$script"
+        is_script=$(is_audit_script "$script")
+        [ "$is_script" -eq "1" ] && run_script "$script"
     done
 
 fi
