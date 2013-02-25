@@ -81,7 +81,7 @@ is_audit_script()
     local script="$1"
     [ -x "$script" ] || echo 0
     case $(basename "$script") in
-        $myname|utils|dummy|*~)
+        $myname|utils|dummy|*~|*[._-][Bb][Aa][Kk]|-*)
             echo 0
             ;;
         *)
