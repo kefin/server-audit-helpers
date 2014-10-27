@@ -10,14 +10,17 @@ system administrators.
 The package includes wrapper sub-scripts (located in the packages's
 "bin" subdirectory) to run the following security tools:
 
-* chkrootkit
 * lynis
 * lsat
 * rkhunter
-* tripwire
 
 A "dummy" script template is included as an example of how to create a
 new sub-script to use with the main "run_audit" script.
+
+The following are installed but disabled (in the "bin/disabled" folder):
+
+* chkrootkit
+* tripwire
 
 IMPORTANT: The security tools must be already installed on your server for
 the wrapper scripts to work.
@@ -75,15 +78,13 @@ add:
 
 * or run using the "at" daemon:
 
-at 12am
-/usr/local/audit/bin/run_audit
-CTRL-D
+echo /usr/local/audit/bin/run_audit | at 12am
 
 * to execute individual tools:
 
-/usr/local/audit/bin/run_audit chkrootkit
-/usr/local/audit/bin/run_audit tripwire
-/usr/local/audit/bin/run_audit chkrootkit rkhunter tripwire
+/usr/local/audit/bin/run_audit lynis
+/usr/local/audit/bin/run_audit lsat
+/usr/local/audit/bin/run_audit rkhunter lsat lynis
 etc.
 
 
