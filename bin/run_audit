@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2013-02-25 kchan
+# * updated: 2014-10-27 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -13,11 +13,11 @@
 # 0 0 * * * /usr/local/audit/bin/run_audit >> /dev/null 2>&1
 
 ########################################################################
-myname=$(basename "$0")
-OLD_PWD=$PWD
+myname="${0##*/}"
+current_wd=$PWD
 cd $(dirname "$0")
-mydir=${PWD%/}
-cd "$OLD_PWD"
+mydir="${PWD%/}"
+cd "$current_wd"
 ########################################################################
 
 
@@ -142,8 +142,15 @@ else
 
     for script in $(find "$mydir" -type f -print | sort)
     do
-        is_script=$(is_audit_script "$script")
-        [ "$is_script" = "1" ] && run_script "$script"
+        case "$script" in
+            *disabled/*)
+                ;;
+            *)
+                if [ $(is_audit_script "$script") -eq 1 ]; then
+                    run_script "$script"
+                fi
+                ;;
+        esac
     done
 
 fi

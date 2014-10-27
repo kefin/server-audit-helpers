@@ -53,9 +53,9 @@ SCRIPTS="\
     dummy \
     lsat \
     lynis \
-    chkrootkit \
+    disabled/chkrootkit \
     rkhunter \
-    tripwire"
+    disabled/tripwire"
 TEMPLATE_SUFFIX=".template"
 CONFIG_TEMPLATES="run_audit.conf${TEMPLATE_SUFFIX}"
 CONFIGS="run_audit.conf"
