@@ -30,8 +30,8 @@ usage()
 # Script to run audit tools and email reports to sysadmin
 #
 # Usage: $myname scripts
-#   -h    # display usage
-#
+#   -h              # display usage
+#   -X|--dry-run    # do dry-run
 EOF
     exit 1
 }
@@ -47,6 +47,8 @@ error()
 # run audit sub-scripts
 
 errors=0
+debug=0
+dry_run=0
 
 # error function
 
@@ -96,21 +98,30 @@ run_script()
 {
     local script="$1"
     echo >&2 "# running $script ..."
-    "$script"
+    if [ $dry_run -eq 0 ]; then
+        "$script"
+    else
+        echo "$script"
+    fi
     echo >&2 "# done."
 }
 
 
 # parse parameters
 
-debug=0
 scripts=
 
 while [ $# -gt 0 ]
 do
     case "$1" in
-        -*|-help|--help)
+        -\?|-help|--help)
             usage
+            ;;
+        -X|--dry-run)
+            dry_run=1
+            ;;
+        -*)
+            error "Unknown optin: $1"
             ;;
         *)
             s="${mydir}/$1"
@@ -121,6 +132,10 @@ do
     shift
 done
 
+
+if [ $dry_run -ne 0 ]; then
+    printf >&2 "# dry run ..."
+fi
 
 if [ "X$scripts" != "X" ]; then
 
