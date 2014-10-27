@@ -5,7 +5,7 @@
 # * configuration files are installed in /etc/audit
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2012-12-23 kchan
+# * updated: 2014-10-27 kchan
 
 ########################################################################
 myname=$(basename "$0")
@@ -46,15 +46,15 @@ SCRIPT_SRC_DIR="${SRC_DIR}/bin"
 CONFIG_SRC_DIR="${SRC_DIR}/conf"
 SCRIPT_DST_DIR="/usr/local/${PACKAGE_NAME}/bin"
 CONFIG_DST_DIR="/etc/${PACKAGE_NAME}"
-INSTALL_DIRS="$SCRIPT_DST_DIR $CONFIG_DST_DIR"
+INSTALL_DIRS="$SCRIPT_DST_DIR $SCRIPT_DST_DIR/disabled $CONFIG_DST_DIR"
 SCRIPTS="\
     run_audit \
     utils \
     dummy \
     lsat \
     lynis \
-    disabled/chkrootkit \
     rkhunter \
+    disabled/chkrootkit \
     disabled/tripwire"
 TEMPLATE_SUFFIX=".template"
 CONFIG_TEMPLATES="run_audit.conf${TEMPLATE_SUFFIX}"
