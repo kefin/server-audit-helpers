@@ -46,4 +46,3 @@ run_lynis()
 [ "X$LYNIS" != "X" -a -x "$LYNIS" ] \
     && run_tool "lynis" "run_lynis" \
     || echo >&2 "# unable to execute command: lynis"
-
