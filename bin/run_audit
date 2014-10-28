@@ -82,7 +82,7 @@ is_audit_script()
 {
     local script="$1"
     [ -x "$script" ] || return 1
-    case $(basename "$script") in
+    case "${script##*/}" in
         $myname|utils|dummy|*~|*[._-][Bb][Aa][Kk]|-*|\#*\#|*.sw[nop])
             return 1
             ;;
@@ -99,7 +99,7 @@ run_script()
     local script="$1"
     echo >&2 "# running $script ..."
     if [ $dry_run -eq 0 ]; then
-        "$script"
+        "$script" || $((errors + 1))
     else
         echo "$script"
     fi
@@ -114,7 +114,7 @@ scripts=
 while [ $# -gt 0 ]
 do
     case "$1" in
-        -\?|-help|--help)
+        -\?|-h|-help|--help)
             usage
             ;;
         -X|--dry-run)
