@@ -162,7 +162,8 @@ else
                 ;;
             *)
                 is_audit_script "$script" \
-                    && run_script "$script"
+                    && run_script "$script" \
+                    || exec_error "$script"
                 ;;
         esac
     done
