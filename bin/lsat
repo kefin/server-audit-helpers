@@ -54,4 +54,4 @@ run_lsat()
 
 [ "X$LSAT" != "X" -a -x "$LSAT" ] \
     && run_tool "lsat" "run_lsat" \
-    || echo >&2 "# unable to execute command: lsat"
+    || error "unable to execute command: lsat"
