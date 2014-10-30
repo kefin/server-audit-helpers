@@ -149,12 +149,10 @@ if [ $dry_run -ne 0 ]; then
 fi
 
 if [ "X$scripts" = "X" ]; then
-
     # if no scripts are supplied as parameters, check if
     # DEFAULT_AUDIT_SCRIPTS is defined and use that list.
     # if not defined, loop through scripts in audit bin directory
     # and add all runnable scripts.
-
     if [ "X$DEFAULT_AUDIT_SCRIPTS" != "X" ]; then
         scripts="$DEFAULT_AUDIT_SCRIPTS"
     else
@@ -171,7 +169,7 @@ if [ "X$scripts" = "X" ]; then
                     ;;
             esac
         done
-
+    fi
 fi
 
 
