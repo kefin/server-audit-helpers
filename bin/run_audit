@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-28 kchan
+# * updated: 2014-10-29 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -36,13 +36,6 @@ EOF
     exit 1
 }
 
-error()
-{
-    [ "$1" ] && echo >&2 "###" "$@"
-    exit 1
-}
-
-
 ########################################################################
 # run audit sub-scripts
 
@@ -50,11 +43,22 @@ errors=0
 debug=0
 dry_run=0
 
+# load config
+
+BASE_DIR="$(dirname $mydir)"
+CONFIG_DIR="/etc/audit"
+CONFIG="${CONFIG_DIR}/run_audit.conf"
+UTILS="${BASE_DIR}/bin/utils"
+
+[ ! -f "$CONFIG" ] && error "Configuration file not found: $CONFIG"
+. "$CONFIG"
+
+
 # error function
 
 exec_error()
 {
-    echo >&2 "# script error: $1"
+    printf >&2 "%s\n" "# script error: $1"
     $((errors + 1))
 }
 
@@ -137,38 +141,40 @@ if [ $dry_run -ne 0 ]; then
     printf >&2 "# dry run ..."
 fi
 
-if [ "X$scripts" != "X" ]; then
-
-    # loop through scripts provided as parameters if these exist
-    # * for scripts supplied on the command line we do minimal
-    #   filtering and execute it if it has the executable bit set.
-
-    for s in $scripts
-    do
-        script="${mydir}/${s}"
-        is_executable "$script" \
-            && run_script "$script" \
-            || exec_error "$script"
-    done
-
-else
-
-    # loop through scripts in audit bin directory if no parameters
-
-    for script in $(find "$mydir" -type f -print | sort)
-    do
-        case "$script" in
-            *disabled/*)
-                ;;
-            *)
-                is_audit_script "$script" \
-                    && run_script "$script" \
-                    || exec_error "$script"
-                ;;
-        esac
-    done
-
+if [ "X$scripts" = "X" ]; then
+    # if no scripts are supplied as parameters, check if
+    # DEFAULT_AUDIT_SCRIPTS is defined and use that list.
+    # if not defined, loop through scripts in audit bin directory
+    # and add all runnable scripts.
+    if [ "X$DEFAULT_AUDIT_SCRIPTS" != "X" ]; then
+        scripts="$DEFAULT_AUDIT_SCRIPTS"
+    else
+        for _script in $(find "$mydir" -type f -print | sort)
+        do
+            case "$_script" in
+                *disabled/*)
+                    ;;
+                *)
+                    if is_audit_script "$script"; then
+                        _script_name="${_script##*/}"
+                        scripts="$scripts $_script_name"
+                    fi
+                    ;;
+            esac
+        done
+    fi
 fi
+
+
+# loop through scripts and run each one
+
+for s in $scripts
+do
+    script="${mydir}/${s}"
+    is_executable "$script" \
+        && run_script "$script" \
+        || exec_error "$script"
+done
 
 [ "$errors" -eq 0 ] && status=0 || status=1
 

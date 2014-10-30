@@ -5,23 +5,16 @@
 # helper functions for audit scripts
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-10-30 kchan
 
-########################################################################
 myname="${0##*/}"
-current_wd=$PWD
-cd $(dirname "$0")
-mydir="${PWD%/}"
-cd "$current_wd"
-########################################################################
-
 
 ########################################################################
 # helper functions
 
 error()
 {
-    [ "$1" ] && echo >&2 "###" "$@"
+    [ "$1" ] && printf >&2 "### %s\n" "$*"
     exit 1
 }
 
@@ -67,7 +60,7 @@ create_tmpfile()
 {
     local tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
     [ $? -ne 0 ] && error "Can't create temp file, exiting..."
-    touch "$tmpfile"
+    #touch "$tmpfile"
     echo "$tmpfile"
 }
 
@@ -97,7 +90,7 @@ run_tool()
     while [ $# -gt 0 ]
     do
         case "$1" in
-            --quiet)
+            -q|--quiet)
                 no_log=1
                 no_email=1
                 ;;
@@ -117,24 +110,29 @@ run_tool()
         if [ "X$command" != "X" ]; then
             $command
         else
-            echo >&2 "No command to run."
+            printf >&2 "No command to run.\n"
         fi
     else
         local tmpfile=$(create_tmpfile)
         trap "rm -f $tmpfile" EXIT
         {
-            echo $DIVIDER
-            echo "# Start  : $(date '+%Y-%m-%d %H:%M:%S')"
-            echo
+            printf "%s\n" $DIVIDER
+            printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "\n"
+            tstart=$(date +'%s')
             if [ "X$command" != "X" ]; then
                 $command
             else
-                echo "No command to run."
+                printf "No command to run.\n"
             fi
-            echo
-            echo "# Finish : $(date '+%Y-%m-%d %H:%M:%S')"
-            echo $DIVIDER
-            echo
+            tfinish=$(date +'%s')
+            elapsed=$(expr "$tfinish" - "$tstart" \
+                | awk '{printf("%02dm%02ds\n", $1/60, $1%60);}')
+            printf "\n"
+            printf "# Finish : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "# Elapsed: $elapsed\n"
+            printf "%s\n" $DIVIDER
+            printf "\n"
         } >"$tmpfile" 2>&1
     fi
 
@@ -150,13 +148,14 @@ run_tool()
     fi
 
     if [ $no_email -eq 0 ]; then
-        if [ "X$EMAIL" != "X" ]; then
+        recipients="${EMAIL:=$RECIPIENTS}"
+        if [ "X$recipients" != "X" ]; then
             if [ "X$SUBJECT" != "X" ]; then
                 subject="$SUBJECT - ${command_name} output"
             else
                 subject="${command_name} output"
             fi
-            for email in $EMAIL
+            for email in $recipients
             do
                 notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
             done
