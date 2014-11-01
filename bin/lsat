@@ -30,28 +30,25 @@ check_root_user
 # run lsat audit
 
 LSAT=$(which lsat || echo "")
-LSAT_OUTPUT="lsat.out"
-[ "X$LOG_DIR" = "X" ] && LOG_DIR="/var/log/audit"
+LOGFILE="${LOG_DIR:-/var/log/audit}/lsat.out"
 
 DIVIDER="########################################################################"
 
 run_lsat()
 {
-    local _current_wd=$(pwd)
-    cd "$LOG_DIR"
-    {
-        "$LSAT" && {
-            if [ -f "$LSAT_OUTPUT" ]; then
-                echo
-                echo "$DIVIDER"
-                echo "# lsat output"
-                cat "$LSAT_OUTPUT"
-                echo "$DIVIDER"
-            fi
-        }
-    } 2>&1
-    cd "$_current_wd"
+    if "$LSAT" -o "$LOGFILE"; then
+        if [ -f "$LOGFILE" ]; then
+            echo
+            echo "$DIVIDER"
+            cat "$LOGFILE"
+            echo "$DIVIDER"
+            return 0
+        fi
+    fi
+    return 1
 }
+
+makedir "$(dirname $LOGFILE)"
 
 if [ "X$LSAT" != "X" ] && [ -x "$LSAT" ]; then
     run_tool "lsat" "run_lsat" || exit 1

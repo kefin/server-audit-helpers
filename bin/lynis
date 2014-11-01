@@ -34,15 +34,10 @@ LOGFILE="${LOG_DIR:-/var/log/audit}/lynis.log"
 
 run_lynis()
 {
-    if [ "X$LYNIS_DIR" != "X" ]; then
-        local _currend_wd=$(pwd)
-        cd "$LYNIS_DIR"
-        "$LYNIS" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
-        cd "$_current_wd"
-    else
-        "$LYNIS" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
-    fi
+    "$LYNIS" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
 }
+
+makedir "$(dirname $LOGFILE)"
 
 if [ "X$LYNIS" != "X" ] && [ -x "$LYNIS" ]; then
     run_tool "lynis" "run_lynis" || exit 1

@@ -34,12 +34,11 @@ LOGFILE="${LOG_DIR:=/var/log/audit}/rkhunter.log"
 
 run_rkhunter()
 {
-    #"$RKHUNTER" --update --nocolors --skip-keypress --logfile "$LOGFILE"
-    "$RKHUNTER" --cronjob --logfile "$LOGFILE"
+    "$RKHUNTER" --cronjob --logfile "$LOGFILE" || return 1
     cat "$LOGFILE"
 }
 
-makedir "$(dirname $RKHUNTER_LOGFILE)"
+makedir "$(dirname $LOGFILE)"
 
 if [ "X$RKHUNTER" != "X" ] && [ -x "$RKHUNTER" ]; then
     run_tool "rkhunter" "run_rkhunter" || exit 1
