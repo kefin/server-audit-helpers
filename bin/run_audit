@@ -103,7 +103,7 @@ run_script()
     local script="$1"
     echo >&2 "# running $script ..."
     if [ $dry_run -eq 0 ]; then
-        "$script" || $((errors + 1))
+        "$script" || errors=$((errors + 1))
     else
         echo "$script"
     fi
