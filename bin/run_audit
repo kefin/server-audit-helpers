@@ -171,9 +171,12 @@ fi
 for s in $scripts
 do
     script="${mydir}/${s}"
-    is_executable "$script" \
-        && run_script "$script" \
-        || exec_error "$script"
+    if is_executable "$script"; then
+        echo >&2 "# [$myname] running script: $script"
+        run_script "$script"
+    else
+        exec_error "$script"
+    fi
 done
 
 [ "$errors" -eq 0 ] && status=0 || status=1
