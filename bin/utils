@@ -7,7 +7,9 @@
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
 # * updated: 2014-11-01 kchan
 
+########################################################################
 myname="${0##*/}"
+########################################################################
 
 ########################################################################
 # helper functions
@@ -135,13 +137,6 @@ run_tool()
             printf "%s\n" $DIVIDER
             printf "\n"
         } >"$tmpfile" 2>&1
-    fi
-
-    if [ $no_log -eq 0 ]; then
-        log_dir="${LOG_DIR:=$DEFAULT_LOG_DIR}"
-        log_dir="${log_dir%/}"
-        makedir "$log_dir"
-        cat "$tmpfile" >>"$log_dir/${command_name}.log"
     fi
 
     if [ $no_email -eq 0 ]; then

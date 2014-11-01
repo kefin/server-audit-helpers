@@ -34,8 +34,13 @@ LOGFILE="${LOG_DIR:=/var/log/audit}/rkhunter.log"
 
 run_rkhunter()
 {
-    "$RKHUNTER" --cronjob --logfile "$LOGFILE" || return 1
-    cat "$LOGFILE"
+    "$RKHUNTER" --cronjob --logfile "$LOGFILE"
+    if [ -f "$LOGFILE" ]; then
+        cat "$LOGFILE"
+    else
+        printf >&2 "### log file not found: $LOGFILE\n"
+        return 1
+    fi
 }
 
 makedir "$(dirname $LOGFILE)"
