@@ -30,16 +30,17 @@ check_root_user
 # run lynis audit
 
 LYNIS=$(which lynis || echo "")
+LOGFILE="${LOG_DIR:-/var/log/audit}/lynis.log"
 
 run_lynis()
 {
     if [ "X$LYNIS_DIR" != "X" ]; then
-        currend_wd=$(pwd)
+        local _currend_wd=$(pwd)
         cd "$LYNIS_DIR"
-        "$LYNIS" -c -Q --auditor "$AUDITOR" --cronjob
-        cd "$current_wd"
+        "$LYNIS" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
+        cd "$_current_wd"
     else
-        "$LYNIS" -c -Q --auditor "$AUDITOR" --cronjob
+        "$LYNIS" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
     fi
 }
 
