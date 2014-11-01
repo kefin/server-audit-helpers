@@ -5,14 +5,14 @@
 # * configuration files are installed in /etc/audit
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
 
 ########################################################################
-myname=$(basename "$0")
-OLD_PWD=$PWD
+myname="${0##*/}"
+current_wd=$PWD
 cd $(dirname "$0")
-mydir=${PWD%/}
-cd "$OLD_PWD"
+mydir="${PWD%/}"
+cd "$current_wd"
 ########################################################################
 
 
@@ -106,7 +106,7 @@ do
     src="${SCRIPT_SRC_DIR}/$file"
     dst="${SCRIPT_DST_DIR}/$file"
     install -m "$SCRIPT_PERMS" "$src" "$dst" \
-        && echo "# $file installed as $dst"
+        && echo "# Installed $dst"
 done
 
 for file in $CONFIG_TEMPLATES
@@ -114,7 +114,7 @@ do
     src="${CONFIG_SRC_DIR}/$file"
     dst="${CONFIG_DST_DIR}/$file"
     install -m "$CONFIG_PERMS" "$src" "$dst" \
-        && echo "# $file installed as $dst"
+        && echo "# Installed $dst"
 done
 
 
