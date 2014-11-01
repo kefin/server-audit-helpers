@@ -30,13 +30,13 @@ check_root_user
 # run rkunter audit
 
 RKHUNTER=$(which rkhunter || echo "")
-RKHUNTER_LOGFILE="/var/log/audit/rkhunter.log"
+LOGFILE="${LOG_DIR:=/var/log/audit}/rkhunter.log"
 
 run_rkhunter()
 {
-    "$RKHUNTER" --update --nocolors --skip-keypress
-    "$RKHUNTER" --cronjob
-    cat "$RKHUNTER_LOGFILE"
+    #"$RKHUNTER" --update --nocolors --skip-keypress --logfile "$LOGFILE"
+    "$RKHUNTER" --cronjob --logfile "$LOGFILE"
+    cat "$LOGFILE"
 }
 
 makedir "$(dirname $RKHUNTER_LOGFILE)"
