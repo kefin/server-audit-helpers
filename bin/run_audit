@@ -172,7 +172,6 @@ for s in $scripts
 do
     script="${mydir}/${s}"
     if is_executable "$script"; then
-        echo >&2 "# [$myname] running script: $script"
         run_script "$script"
     else
         exec_error "$script"
