@@ -158,5 +158,5 @@ run_tool()
             done
         fi
     fi
-    return exit_status
+    return $exit_status
 }
