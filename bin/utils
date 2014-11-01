@@ -5,7 +5,7 @@
 # helper functions for audit scripts
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-30 kchan
+# * updated: 2014-11-01 kchan
 
 myname="${0##*/}"
 
@@ -86,6 +86,7 @@ run_tool()
     local subject=
     local no_log=0
     local no_email=0
+    local exit_status=0
 
     while [ $# -gt 0 ]
     do
@@ -108,7 +109,7 @@ run_tool()
 
     if [ $no_log -ne 0 ] && [ $no_email -ne 0 ]; then
         if [ "X$command" != "X" ]; then
-            $command
+            $command || exit_status=1
         else
             printf >&2 "No command to run.\n"
         fi
@@ -121,7 +122,7 @@ run_tool()
             printf "\n"
             tstart=$(date +'%s')
             if [ "X$command" != "X" ]; then
-                $command
+                $command || exit_status=1
             else
                 printf "No command to run.\n"
             fi
@@ -137,11 +138,7 @@ run_tool()
     fi
 
     if [ $no_log -eq 0 ]; then
-        if [ "X$LOG_DIR" != "X" ]; then
-            log_dir="$LOG_DIR"
-        else
-            log_dir="${DEFAULT_LOG_DIR}/${command_name}"
-        fi
+        log_dir="${LOG_DIR:=$DEFAULT_LOG_DIR}"
         log_dir="${log_dir%/}"
         makedir "$log_dir"
         cat "$tmpfile" >>"$log_dir/${command_name}.log"
@@ -161,4 +158,5 @@ run_tool()
             done
         fi
     fi
+    return exit_status
 }

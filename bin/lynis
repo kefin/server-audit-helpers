@@ -43,6 +43,8 @@ run_lynis()
     fi
 }
 
-[ "X$LYNIS" != "X" -a -x "$LYNIS" ] \
-    && run_tool "lynis" "run_lynis" \
-    || error "unable to execute command: lynis"
+if [ "X$LYNIS" != "X" ] && [ -x "$LYNIS" ]; then
+    run_tool "lynis" "run_lynis" || exit 1
+else
+    error "unable to execute command: lynis"
+fi

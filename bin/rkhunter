@@ -41,6 +41,8 @@ run_rkhunter()
 
 makedir "$(dirname $RKHUNTER_LOGFILE)"
 
-[ "X$RKHUNTER" != "X" -a -x "$RKHUNTER" ] \
-    && run_tool "rkhunter" "run_rkhunter" \
-    || error "unable to execute command: rkhunter"
+if [ "X$RKHUNTER" != "X" ] && [ -x "$RKHUNTER" ]; then
+    run_tool "rkhunter" "run_rkhunter" || exit 1
+else
+    error "unable to execute command: rkhunter"
+fi

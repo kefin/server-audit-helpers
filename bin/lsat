@@ -53,6 +53,8 @@ run_lsat()
     cd "$_current_wd"
 }
 
-[ "X$LSAT" != "X" -a -x "$LSAT" ] \
-    && run_tool "lsat" "run_lsat" \
-    || error "unable to execute command: lsat"
+if [ "X$LSAT" != "X" ] && [ -x "$LSAT" ]; then
+    run_tool "lsat" "run_lsat" || exit 1
+else
+    error "unable to execute command: lsat"
+fi
