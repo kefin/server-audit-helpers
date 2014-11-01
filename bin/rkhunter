@@ -3,7 +3,7 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
 
 PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
@@ -29,7 +29,8 @@ check_root_user
 
 # run rkunter audit
 
-RKHUNTER_LOGFILE="/var/log/rkhunter.log"
+RKHUNTER=$(which rkhunter || echo "")
+RKHUNTER_LOGFILE="/var/log/audit/rkhunter.log"
 
 run_rkhunter()
 {
@@ -38,7 +39,7 @@ run_rkhunter()
     cat "$RKHUNTER_LOGFILE"
 }
 
-RKHUNTER=$(which rkhunter || echo "")
+makedir "$(dirname $RKHUNTER_LOGFILE)"
 
 [ "X$RKHUNTER" != "X" -a -x "$RKHUNTER" ] \
     && run_tool "rkhunter" "run_rkhunter" \

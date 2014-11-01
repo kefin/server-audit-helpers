@@ -3,7 +3,7 @@
 # wrapper sub-script to run security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
 
 ########################################################################
 myname="${0##*/}"
@@ -30,26 +30,27 @@ check_root_user
 # run lsat audit
 
 LSAT=$(which lsat || echo "")
+LSAT_OUTPUT="lsat.out"
+[ "X$LOG_DIR" = "X" ] && LOG_DIR="/var/log/audit"
 
-divider="########################################################################"
+DIVIDER="########################################################################"
 
 run_lsat()
 {
-    current_wd=$(pwd)
+    local _current_wd=$(pwd)
     cd "$LOG_DIR"
-    lsat_output="lsat.out"
     {
         "$LSAT" && {
-            if [ -f "$lsat_output" ]; then
+            if [ -f "$LSAT_OUTPUT" ]; then
                 echo
-                echo "$divider"
-                echo "# lsat_output"
-                cat "$lsat_output"
-                echo "$divider"
+                echo "$DIVIDER"
+                echo "# lsat output"
+                cat "$LSAT_OUTPUT"
+                echo "$DIVIDER"
             fi
         }
     } 2>&1
-    cd "$current_wd"
+    cd "$_current_wd"
 }
 
 [ "X$LSAT" != "X" -a -x "$LSAT" ] \
