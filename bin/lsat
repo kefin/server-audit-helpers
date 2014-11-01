@@ -29,21 +29,20 @@ check_root_user
 
 # run lsat audit
 
-LSAT=$(which lsat || echo "")
+LSAT=$(which lsat)
 LOGFILE="${LOG_DIR:-/var/log/audit}/lsat.out"
 
 DIVIDER="########################################################################"
 
 run_lsat()
 {
-    if "$LSAT" -o "$LOGFILE"; then
-        if [ -f "$LOGFILE" ]; then
-            echo
-            echo "$DIVIDER"
-            cat "$LOGFILE"
-            echo "$DIVIDER"
-            return 0
-        fi
+    "$LSAT" -o "$LOGFILE"
+    if [ -f "$LOGFILE" ]; then
+        echo
+        echo "$DIVIDER"
+        cat "$LOGFILE"
+        echo "$DIVIDER"
+        return 0
     fi
     return 1
 }

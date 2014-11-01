@@ -29,7 +29,7 @@ check_root_user
 
 # run lynis audit
 
-LYNIS=$(which lynis || echo "")
+LYNIS=$(which lynis)
 LOGFILE="${LOG_DIR:-/var/log/audit}/lynis.log"
 
 run_lynis()

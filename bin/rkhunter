@@ -29,7 +29,7 @@ check_root_user
 
 # run rkunter audit
 
-RKHUNTER=$(which rkhunter || echo "")
+RKHUNTER=$(which rkhunter)
 LOGFILE="${LOG_DIR:=/var/log/audit}/rkhunter.log"
 
 run_rkhunter()
