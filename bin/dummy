@@ -16,48 +16,26 @@ cd "$current_wd"
 
 # load configurations and helper functions
 
-BASE_DIR="$(dirname $mydir)"
+BASE_DIR="$mydir"
 CONFIG_DIR="/etc/audit"
 CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+UTILS="${BASE_DIR}/utils"
 
 . "$CONFIG"
 . "$UTILS"
 
 check_root_user
 
-# run tool
+# output message
 
-TOOL="email_config"
-output_file="$(create_tmpfile)"
-trap "rm -f $output_file" EXIT
-
-message()
-{
-    echo "LOG_DIR: ${LOG_DIR"
-    echo "RECIPIENTS: ${EMAIL:-$RECIPIENTS}"
-    echo "
-This is a dummy audit script template that sends a test email to the
-recipients defined in your run_audit.conf file.
-
+echo "
+This is a dummy audit script template that prints out the vars in
+your run_audit.conf file.
 "
-    echo "Configuration: $CONFIG"
-    echo
-    cat "$CONFIG"
-    echo
-}
-
-if [ "X$EMAIL" != "X" ]; then
-    message >"$output_file"
-    if [ "X$SUBJECT" != "X" ]; then
-        subject="$SUBJECT - ${TOOL}"
-    else
-        subject="${TOOL} output"
-    fi
-    for email in $EMAIL
-    do
-        notify "$email" "$(date '+%Y-%m-%d') $subject" "$output_file"
-    done
-else
-    message >&2
-fi
+echo "LOG_DIR: ${LOG_DIR"
+echo "RECIPIENTS: ${EMAIL:-$RECIPIENTS}"
+echo "Configuration: $CONFIG"
+echo "# -----------------------------------"
+cat "$CONFIG"
+echo "# -----------------------------------"
+echo
