@@ -246,15 +246,6 @@ done
 
 elog "# Done."
 
-# for file in $SCRIPTS
-# do
-#     src="${SCRIPT_SRC_DIR}/$file"
-#     dst="${SCRIPT_DST_DIR}/$file"
-#     install -m "$SCRIPT_PERMS" "$src" "$dst" \
-#         && echo "# Installed $dst"
-# done
-
-
 # install configs
 
 elog ""
@@ -286,15 +277,6 @@ done
 
 elog "# Done."
 
-# for file in $CONFIG_TEMPLATES
-# do
-#     src="${CONFIG_SRC_DIR}/$file"
-#     dst="${CONFIG_DST_DIR}/$file"
-#     install -m "$CONFIG_PERMS" "$src" "$dst" \
-#         && echo "# Installed $dst"
-# done
-
-
 # create configuration file if it doesn't exist
 
 for file in $CONFIGS
@@ -314,5 +296,12 @@ do
         fi
     fi
 done
+
+if [ -x "$MAIN_SCRIPT" ]; then
+    version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
+    elog ""
+    elog "# Installed script: $MAIN_SCRIPT"
+    elog "$version"
+fi
 
 exit $errors
