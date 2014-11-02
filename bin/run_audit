@@ -46,7 +46,7 @@ usage()
 #
 # Examples:
 # To run all scripts defined in DEFAULT_AUDIT_SCRIPTS or in the
-# /usr/local/audit/bin directory (if DEFAULT_AUDIT+_SCRIPTS is not defined):
+# /usr/local/audit/bin directory (if DEFAULT_AUDIT__SCRIPTS is not defined):
 #
 #   /usr/local/audit/bin/run_audit
 #
@@ -86,12 +86,14 @@ email_report=1
 . "$UTILS"
 
 if [ ! -f "$CONFIG" ]; then
-    printf >&2 "### Configuration file not found: $CONFIG\n"
-    printf >&2 "You must have a $CONFIG file for this script to run.\n"
-    printf >&2 "A template configuration file is is in $CONFIG_DIR.\n"
-    printf >&2 "Make a copy of the template and rename it as $CONFIG,\n"
-    printf >&2 "then run this script again.\n"
-    printf >&2 "Type '$0 --help' for usage informaton.\n"
+    cat <<EOF
+### Configuration file not found: $CONFIG
+# You must have a $CONFIG file for this script to run.
+# A template configuration file is is in $CONFIG_DIR.
+# Make a copy of the template and rename it as $CONFIG,
+# then run this script again.
+# Type '$0 --help' for usage informaton.
+EOF
     exit 1
 fi
 . "$CONFIG"
