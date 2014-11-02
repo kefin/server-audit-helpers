@@ -125,8 +125,8 @@ run_script()
         trap "rm -f $tmpfile" EXIT
         {
             printf "%s\n" $DIVIDER
-            printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
             printf "# Script : $command_name\n"
+            printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
             printf "\n"
             tstart=$(date +'%s')
             if [ -x "$script" ]; then
