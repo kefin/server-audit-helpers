@@ -29,13 +29,11 @@ check_root_user
 # output message
 
 echo "
-This is a dummy audit script template that prints out the vars in
-your run_audit.conf file.
+This is a dummy audit script template that prints out your
+run_audit.conf file.
 "
-echo "LOG_DIR: $LOG_DIR"
-echo "RECIPIENTS: ${EMAIL:-$RECIPIENTS}"
-echo "Configuration: $CONFIG"
-echo "# -----------------------------------"
+echo "Your configurations : $CONFIG"
+echo "# [snip] ----------------------------"
 cat "$CONFIG"
-echo "# -----------------------------------"
+echo "# [snip] ----------------------------"
 echo
