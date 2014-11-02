@@ -197,9 +197,9 @@ run_script()
     else
         if [ "X$tmpfile" = "X" ]; then
             tmpfile="$(create_tmpfile)"
-            elog "# created tmpfile: $tmpfile"
+            dbg "# created tmpfile: $tmpfile"
         fi
-        elog "# tmpfile: $tmpfile"
+        dbg "# tmpfile: $tmpfile"
         {
             printf "%s\n" $DIVIDER
             printf "# Script : $command_name\n"
@@ -275,7 +275,9 @@ fi
 
 for s in $scripts
 do
+    dbg "# checking script: $s"
     script="${BASE_DIR}/${s}"
+    dbg "# script path: $s"
     if is_executable "$script"; then
         run_script "$script" || errors=$((errors + 1))
     else
