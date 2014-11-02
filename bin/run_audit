@@ -88,10 +88,10 @@ email_report=1
 if [ ! -f "$CONFIG" ]; then
     cat <<EOF
 ### Configuration file not found: $CONFIG
-# You must have a $CONFIG file for this script to run.
-# A configuration file template is in $CONFIG_DIR.
-# Make a copy of the template and rename it as $CONFIG,
-# then run this script again.
+# You must have a configuration file ($CONFIG)
+# for this script to run. A configuration file template is in
+# $CONFIG_DIR. Make a copy of the template and rename it as
+# $CONFIG, then run this script again.
 # Type '$0 --help' for usage informaton.
 EOF
     exit 1
