@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-29 kchan
+# * updated: 2014-11-01 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -37,18 +37,27 @@ EOF
 }
 
 ########################################################################
-# run audit sub-scripts
+# run audit scripts
 
-errors=0
-debug=0
-dry_run=0
+# load utilities and configurations
 
-# load config
+VERBOSE=1
+DEBUG=0
 
-BASE_DIR="$(dirname $mydir)"
+BASE_DIR="$mydir"
 CONFIG_DIR="/etc/audit"
 CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+UTILS="${BASE_DIR}/utils"
+DEFAULT_LOG_DIR="/var/log/audit"
+
+DIVIDER="########################################################################"
+
+errors=0
+dry_run=0
+email_report=1
+
+[ ! -f "$UTILS" ] && error "Utilities module not found: $UTILS"
+. "$UTILS"
 
 [ ! -f "$CONFIG" ] && error "Configuration file not found: $CONFIG"
 . "$CONFIG"
@@ -96,18 +105,61 @@ is_audit_script()
     esac
 }
 
-# function to run sub-script
+# function to execute script and send results by email
+# parameters:
+# * script (full path to executable audit script)
+# * exits 0 if no errors, else 1
 
 run_script()
 {
     local script="$1"
-    echo >&2 "# running $script ..."
-    if [ $dry_run -eq 0 ]; then
-        "$script" || errors=$((errors + 1))
+    local command_name="${script##*/}"
+    local exit_status=0
+
+    elog "# running $script ..."
+
+    if [ $dry_run -ne 0 ]; then
+        log "$script"
     else
-        echo "$script"
+        local tmpfile=$(create_tmpfile)
+        trap "rm -f $tmpfile" EXIT
+        {
+            printf "%s\n" $DIVIDER
+            printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "\n"
+            tstart=$(date +'%s')
+            if [ -x "$script" ]; then
+                "$script" || exit_status=1
+            else
+                printf "### Unable to run script: $script\n"
+            fi
+            tfinish=$(date +'%s')
+            elapsed=$(expr "$tfinish" - "$tstart" \
+                | awk '{printf("%02dm%02ds\n", $1/60, $1%60);}')
+            printf "\n"
+            printf "# Finish : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "# Elapsed: $elapsed\n"
+            printf "%s\n" $DIVIDER
+            printf "\n"
+        } >"$tmpfile" 2>&1
+        if [ $email_report -ne 0 ]; then
+            recipients="${EMAIL:-$RECIPIENTS}"
+            if [ "X$recipients" != "X" ]; then
+                if [ "X$SUBJECT" != "X" ]; then
+                    subject="$SUBJECT - ${command_name}"
+                else
+                    subject="${command_name} output"
+                fi
+                for email in $recipients
+                do
+                    notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
+                done
+            fi
+        fi
     fi
-    echo >&2 "# done."
+
+    elog "# done."
+    return $exit_status
 }
 
 
@@ -121,41 +173,58 @@ do
         -\?|-h|-help|--help)
             usage
             ;;
+        -v|--verbose)
+            verbose=1
+            ;;
+        -q|--quiet)
+            verbose=0
+            ;;
         -X|--dry-run)
             dry_run=1
             ;;
+        -D|--debug)
+            debug=1
+            ;;
+        -n|--no-email|--no-report)
+            email_report=0
+            ;;
         -*)
-            error "Unknown optin: $1"
+            error "Unknown option: $1"
             ;;
         *)
-            s="${mydir}/$1"
+            s="${BASE_DIR}/$1"
             [ ! -f "$s" ] && error "Script not found: $s"
+            [ ! -x "$s" ] && error "Script not executable: $s"
             scripts="$scripts $1"
             ;;
     esac
     shift
 done
 
-
 if [ $dry_run -ne 0 ]; then
+    verbose=1
     printf >&2 "# dry run ..."
 fi
 
+
+# loop through scripts and run each one
+
+# if no scripts are supplied as parameters, check if
+# DEFAULT_AUDIT_SCRIPTS is defined and use that list.
+# if not defined, loop through scripts in audit bin directory
+# and add all runnable scripts.
+
 if [ "X$scripts" = "X" ]; then
-    # if no scripts are supplied as parameters, check if
-    # DEFAULT_AUDIT_SCRIPTS is defined and use that list.
-    # if not defined, loop through scripts in audit bin directory
-    # and add all runnable scripts.
     if [ "X$DEFAULT_AUDIT_SCRIPTS" != "X" ]; then
         scripts="$DEFAULT_AUDIT_SCRIPTS"
     else
-        for _script in $(find "$mydir" -type f -print | sort)
+        find "$BASE_DIR" -type f -print | sort | while read _script
         do
             case "$_script" in
                 *disabled/*)
                     ;;
                 *)
-                    if is_audit_script "$script"; then
+                    if is_audit_script "$_script"; then
                         _script_name="${_script##*/}"
                         scripts="$scripts $_script_name"
                     fi
@@ -165,19 +234,21 @@ if [ "X$scripts" = "X" ]; then
     fi
 fi
 
-
-# loop through scripts and run each one
-
 for s in $scripts
 do
-    script="${mydir}/${s}"
+    script="${BASE_DIR}/${s}"
     if is_executable "$script"; then
-        run_script "$script"
+        run_script "$script" || errors=$((errors + 1))
     else
         exec_error "$script"
     fi
 done
 
-[ "$errors" -eq 0 ] && status=0 || status=1
+if [ "$errors" -eq 0 ]; then
+    status=0
+else
+    elog "# errors: $errors"
+    status=1
+fi
 
 exit $status

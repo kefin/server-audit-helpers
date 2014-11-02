@@ -14,10 +14,34 @@ myname="${0##*/}"
 ########################################################################
 # helper functions
 
+verbose="${VERBOSE:-0}"
+debug="${DEBUG:-0}"
+
 error()
 {
     [ "$1" ] && printf >&2 "### %s\n" "$*"
     exit 1
+}
+
+elog()
+{
+    if [ "$verbose" -eq 1 ]; then
+        printf >&2 "%s\n" "$*"
+    fi
+}
+
+log()
+{
+    if [ "$verbose" -eq 1 ]; then
+        printf "%s\n" "$*"
+    fi
+}
+
+dbug()
+{
+    if [ "$debug" -ne 0 ]; then
+        printf >&2 "%s\n" "$*"
+    fi
 }
 
 check_file()
