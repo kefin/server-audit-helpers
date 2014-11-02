@@ -1,6 +1,6 @@
 # Server Audit Helpers: README
 
-Latest version: 0.3.0  
+Latest version: 0.3.0
 Author: Kevin Chan <kefin@makedostudio.com>
 
 This package resides at:
@@ -38,7 +38,7 @@ The following example commands will download the audit scripts to a directory ca
 
     cd /usr/local/src
     [ ! -d "packages" ] && sudo mkdir packages
-    
+
 Clone the `hg` repository from bitbucket.org:
 
     sudo hg clone https://kchan@bitbucket.org/kchan/server-audit-helpers
@@ -61,7 +61,7 @@ Now, edit the configurations file located in `/etc/audit`:
 
     cd /etc/audit
     sudo vi run_audit.conf
-    
+
 Customize the settings in the `run_audit.conf` configuration file according to your local server setup. Be sure to add your sysadmin email address to `RECIPIENTS` so the audit scripts can send you the reports:
 
     RECIPIENTS="your-sysadmin@your-domain.com"
@@ -69,7 +69,7 @@ Customize the settings in the `run_audit.conf` configuration file according to y
 Be sure to add a `logrotate` task for the audit logs (by default these are located in `/var/log/audit`):
 
     sudo vi /etc/logrotate.d/audit
-    
+
 Enter the following tasks in the file:
 
     /var/log/audit/*.log {
@@ -115,4 +115,3 @@ You can also add custom audit scripts to the `/usr/local/audit/bin` directory. U
 ### Contact
 
 If you have questions about this package, please contact Kevin Chan at <kefin@makedostudio.com>.
-
