@@ -126,6 +126,7 @@ run_script()
         {
             printf "%s\n" $DIVIDER
             printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "# Script : $command_name\n"
             printf "\n"
             tstart=$(date +'%s')
             if [ -x "$script" ]; then
