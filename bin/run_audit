@@ -27,11 +27,34 @@ cd "$current_wd"
 usage()
 {
     cat <<EOF
-# Script to run audit tools and email reports to sysadmin
+# Script to run audit tools and email reports to sysadmin.
 #
-# Usage: $myname scripts
+# Usage: $myname [options[ scripts
 #   -h              # display usage
 #   -X|--dry-run    # do dry-run
+#   -v|--verbose    # sets verbose to 1 (this is the default output mode)
+#   -q|--quiet      # no output (sets verbose to 0)
+#   -n|--no-email   # do not email reports
+#   -D|--debug      # output debug messages
+#
+# Notes:
+# * This script will read configuration settings in /etc/audit/${myname}.conf.
+# * If DEFAULT_AUDIT_SCRIPTS is defined in the configuration file, $myname
+#   will run the scripts when called without supplied script parameters.
+# * If DEFAULT_AUDIT_SCRIPTS is undefined, $myname will run all scripts
+#   in the package scripts directory.
+#
+# Examples:
+# To run all scripts defined in DEFAULT_AUDIT_SCRIPTS or in the
+#  /usr/local/audit/bin directory (if DEFAULT_AUDIT+_SCRIPTS is not defined):
+# /usr/local/audit/bin/run_audit
+#
+# To run only certain scripts:
+# /usr/local/audit/bin/run_audit rkhunter lynis
+#
+# To run scripts and omit email reports:
+# /usr/local/audit/bin/run_audit -n rkhunter lynis
+#
 EOF
     exit 1
 }
@@ -59,7 +82,15 @@ email_report=1
 [ ! -f "$UTILS" ] && error "Utilities module not found: $UTILS"
 . "$UTILS"
 
-[ ! -f "$CONFIG" ] && error "Configuration file not found: $CONFIG"
+if [ ! -f "$CONFIG" ]; then
+    printf >&2 "### Configuration file not found: $CONFIG\n"
+    printf >&2 "You must have a $CONFIG file for this script to run.\n"
+    printf >&2 "A template configuration file is is in $CONFIG_DIR.\n"
+    printf >&2 "Make a copy of the template and rename it as $CONFIG,\n"
+    printf >&2 "then run this script again.\n"
+    printf >&2 "Type '$0 --help' for usage informaton.\n"
+    exit 1
+fi
 . "$CONFIG"
 
 
