@@ -42,7 +42,7 @@ if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
         cat "$LOGFILE"
         echo "$DIVIDER"
     else
-        error "Scan results not found: $LOGFILE\n"
+        error "Scan results not found: $LOGFILE"
     fi
 else
     error "Unable to execute command: $SCANNER"
