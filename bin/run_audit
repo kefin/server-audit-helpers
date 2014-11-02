@@ -29,10 +29,10 @@ usage()
     cat <<EOF
 # Script to run audit tools and email reports to sysadmin.
 #
-# Usage: $myname [options[ scripts
-#   -h              # display usage
-#   -X|--dry-run    # do dry-run
-#   -v|--verbose    # sets verbose to 1 (this is the default output mode)
+# Usage: $myname [options] scripts
+#   -h|--helo       # display usage
+#   -X|--dry-run    # do dry run
+#   -v|--verbose    # print verbose diagnostic messages (this is the default)
 #   -q|--quiet      # no output (sets verbose to 0)
 #   -n|--no-email   # do not email reports
 #   -D|--debug      # output debug messages
@@ -46,14 +46,17 @@ usage()
 #
 # Examples:
 # To run all scripts defined in DEFAULT_AUDIT_SCRIPTS or in the
-#  /usr/local/audit/bin directory (if DEFAULT_AUDIT+_SCRIPTS is not defined):
-# /usr/local/audit/bin/run_audit
+# /usr/local/audit/bin directory (if DEFAULT_AUDIT+_SCRIPTS is not defined):
+#
+#   /usr/local/audit/bin/run_audit
 #
 # To run only certain scripts:
-# /usr/local/audit/bin/run_audit rkhunter lynis
+#
+#   /usr/local/audit/bin/run_audit rkhunter lynis
 #
 # To run scripts and omit email reports:
-# /usr/local/audit/bin/run_audit -n rkhunter lynis
+#
+#   /usr/local/audit/bin/run_audit -n rkhunter lynis
 #
 EOF
     exit 1
