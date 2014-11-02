@@ -191,10 +191,10 @@ fi
 # do install
 
 if [ -x "$MAIN_SCRIPT" ]; then
-    version=$("$MAIN_SCRIPT" -V || echo "???")
+    version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
     elog ""
     elog "# Found existing script: $MAIN_SCRIPT"
-    elog "# Version: $version"
+    elog "$version"
 fi
 
 errors=0
