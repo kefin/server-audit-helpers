@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-# wrapper sub-script to run security tool
+# tripwire
+# * wrapper script to run tripwire security tool
 #
 # * created: 2012-12-21 Kevin Chan <kefin@makedostudio.com>
 # * updated: 2014-10-27 kchan
@@ -17,26 +18,25 @@ cd "$current_wd"
 
 # load configurations and helper functions
 
-BASE_DIR="$(dirname $mydir)"
+BASE_DIR="$mydir"
 CONFIG_DIR="/etc/audit"
 CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+UTILS="${BASE_DIR}/utils"
 
 . "$CONFIG"
 . "$UTILS"
 
 check_root_user
 
-# run security tool
+# run rkunter audit
 
-TOOL="tripwire"
-TRIPWIRE=$(which "$TOOL" || echo "")
+SCANNER=$(which tripwire)
+#LOGFILE="${LOG_DIR:=/var/log/audit}/tripwire.log"
 
-run_tripwire()
-{
-    "$TRIPWIRE" --check --quiet --email-report 2>/dev/null 1>&2
-}
+makedir "$(dirname $LOGFILE)"
 
-[ "X$TRIPWIRE" != "X" -a -x "$TRIPWIRE" ] \
-    && run_tool "$TOOL" "run_${TOOL}" "--quiet" \
-    || echo >&2 "# unable to execute command: $TOOL"
+if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
+    "$SCANNER" --check --quiet --email-report 2>/dev/null 1>&2
+else
+    error "Unable to execute command: $SCANNER"
+fi

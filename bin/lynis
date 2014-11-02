@@ -1,9 +1,10 @@
 #!/bin/sh
 #
-# wrapper sub-script to run security tool
+# lynis
+# * wrapper script to run lynis security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
 
 ########################################################################
 myname="${0##*/}"
@@ -17,10 +18,10 @@ PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
 # load configurations and helper functions
 
-BASE_DIR="$(dirname $mydir)"
+BASE_DIR="$mydir"
 CONFIG_DIR="/etc/audit"
 CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+UTILS="${BASE_DIR}/utils"
 
 . "$CONFIG"
 . "$UTILS"
@@ -29,24 +30,18 @@ check_root_user
 
 # run lynis audit
 
-LYNIS=$(which lynis)
+SCANNER=$(which lynis)
 LOGFILE="${LOG_DIR:-/var/log/audit}/lynis.log"
-
-run_lynis()
-{
-    "$LYNIS" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
-    if [ -f "$LOGFILE" ]; then
-        cat "$LOGFILE"
-    else
-        printf >&2 "### log file not found: $LOGFILE\n"
-        return 1
-    fi
-}
 
 makedir "$(dirname $LOGFILE)"
 
-if [ "X$LYNIS" != "X" ] && [ -x "$LYNIS" ]; then
-    run_tool "lynis" "run_lynis" || exit 1
+if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
+    "$SCANNER" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
+    if [ -f "$LOGFILE" ]; then
+        cat "$LOGFILE"
+    else
+        error "Scan results not found: $LOGFILE\n"
+    fi
 else
-    error "unable to execute command: lynis"
+    error "Unable to execute command: $SCANNER"
 fi
