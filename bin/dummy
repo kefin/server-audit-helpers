@@ -32,7 +32,7 @@ echo "
 This is a dummy audit script template that prints out the vars in
 your run_audit.conf file.
 "
-echo "LOG_DIR: ${LOG_DIR"
+echo "LOG_DIR: $LOG_DIR"
 echo "RECIPIENTS: ${EMAIL:-$RECIPIENTS}"
 echo "Configuration: $CONFIG"
 echo "# -----------------------------------"

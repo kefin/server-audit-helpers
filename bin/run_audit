@@ -68,7 +68,7 @@ email_report=1
 exec_error()
 {
     printf >&2 "%s\n" "# script error: $1"
-    $((errors + 1))
+    errors=$((errors + 1))
 }
 
 # functions to test if sub-script exists and is executable
@@ -121,7 +121,7 @@ run_script()
     if [ $dry_run -ne 0 ]; then
         log "$script"
     else
-        local tmpfile=$(create_tmpfile)
+        local tmpfile="$(create_tmpfile)"
         trap "rm -f $tmpfile" EXIT
         {
             printf "%s\n" $DIVIDER
@@ -155,6 +155,8 @@ run_script()
                     notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
                 done
             fi
+        else
+            cat "$tmpfile"
         fi
     fi
 
