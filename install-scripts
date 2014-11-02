@@ -128,7 +128,7 @@ CONFIGS="run_audit.conf"
 SCRIPT_PERMS="700"
 CONFIG_PERMS="600"
 
-MAIN_SCRIPT="${SCRIPT_DST_DIR}/rub_audit"
+MAIN_SCRIPT="${SCRIPT_DST_DIR}/run_audit"
 
 
 ### parse parameters
@@ -232,16 +232,8 @@ fi
 
 for script in $SCRIPTS
 do
-    dr="$(dirname \"$script\")"
-    if [ ! -d "$d" ]; then
-        if [ $dry_run -eq 0 ]; then
-            makedir "$d"
-            elog "# Created directory $d"
-        else
-            elog "mkdir -p $d"
-        fi
-    fi
-    src="$script"
+    path="${SCRIPT_SRC_DIR}/${script}"
+    src="$path"
     relpath="${script##$scripts_dir/}"
     dst="${SCRIPT_DST_DIR}/${relpath}"
     if [ $dry_run -eq 0 ]; then
