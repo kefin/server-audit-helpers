@@ -16,6 +16,7 @@ cd "$current_wd"
 
 PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
+########################################################################
 # load common code
 
 AUDIT_COMMON="${mydir}/_common"
@@ -25,6 +26,7 @@ if [ ! -f "$AUDIT_COMMON" ]; then
 fi
 . "$AUDIT_COMMON"
 
+########################################################################
 # run lsat audit
 
 SCANNER=$(which lsat)

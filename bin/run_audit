@@ -20,7 +20,6 @@ mydir="${PWD%/}"
 cd "$current_wd"
 ########################################################################
 
-
 ########################################################################
 # helper functions
 
@@ -62,8 +61,8 @@ EOF
     exit 1
 }
 
-########################################################################
 
+########################################################################
 # load common code
 
 AUDIT_COMMON="${mydir}/_common"
@@ -74,9 +73,63 @@ fi
 . "$AUDIT_COMMON"
 
 
-# set vars and define functions
+########################################################################
+# parse parameters
 
+tmpfile=
 email_report=1
+scripts=
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        -\?|-h|-help|--help)
+            usage
+            ;;
+        -v|--verbose)
+            verbose=1
+            ;;
+        -q|--quiet)
+            verbose=0
+            ;;
+        -X|--dry-run)
+            dry_run=1
+            ;;
+        -D|--debug)
+            debug=1
+            ;;
+        -n|--no-email|--no-report)
+            email_report=0
+            ;;
+        -*)
+            error "Unknown option: $1"
+            ;;
+        *)
+            scripts="$scripts $1"
+            ;;
+    esac
+    shift
+done
+
+if [ $dry_run -ne 0 ]; then
+    verbose=1
+    printf >&2 "# dry run ..."
+fi
+
+cleanup()
+{
+    [ -f "$tmpfile" ] && rm -f "$tmpfile"
+}
+
+if [ $dry_run -eq 0 ]; then
+    tmpfile="$(create_tmpfile)"
+fi
+
+trap "cleanup" EXIT
+
+
+########################################################################
+# set vars and define functions
 
 # functions to test if sub-script exists and is executable
 # * is_executable does minimal filtering and checks if script
@@ -106,7 +159,7 @@ is_audit_script()
         $myname|utils|dummy|*~|*[._-][Bb][Aa][Kk]|-*|\#*\#|*.sw[nop])
             return 1
             ;;
-        *)
+        *|_*)
             return 0
             ;;
     esac
@@ -128,8 +181,11 @@ run_script()
     if [ $dry_run -ne 0 ]; then
         log "$script"
     else
-        local tmpfile="$(create_tmpfile)"
-        trap "rm -f $tmpfile" EXIT
+        if [ "X$tmpfile" = "X" ]; then
+            tmpfile="$(create_tmpfile)"
+            elog "# created tmpfile: $tmpfile"
+        fi
+        elog "# tmpfile: $tmpfile"
         {
             printf "%s\n" $DIVIDER
             printf "# Script : $command_name\n"
@@ -175,47 +231,7 @@ run_script()
 }
 
 
-# parse parameters
-
-scripts=
-
-while [ $# -gt 0 ]
-do
-    case "$1" in
-        -\?|-h|-help|--help)
-            usage
-            ;;
-        -v|--verbose)
-            verbose=1
-            ;;
-        -q|--quiet)
-            verbose=0
-            ;;
-        -X|--dry-run)
-            dry_run=1
-            ;;
-        -D|--debug)
-            debug=1
-            ;;
-        -n|--no-email|--no-report)
-            email_report=0
-            ;;
-        -*)
-            error "Unknown option: $1"
-            ;;
-        *)
-            scripts="$scripts $1"
-            ;;
-    esac
-    shift
-done
-
-if [ $dry_run -ne 0 ]; then
-    verbose=1
-    printf >&2 "# dry run ..."
-fi
-
-
+########################################################################
 # loop through scripts and run each one
 
 # if no scripts are supplied as parameters, check if
