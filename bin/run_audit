@@ -127,7 +127,7 @@ done
 
 if [ $dry_run -ne 0 ]; then
     verbose=1
-    printf >&2 "# dry run ..."
+    printf >&2 "# dry run ...\n"
 fi
 
 cleanup()
@@ -156,7 +156,7 @@ is_executable()
     local script="$1"
     [ -x "$script" ] || return 1
     case "${script##*/}" in
-        $myname|utils)
+        $myname|utils|_*|*~|*[._-][Bb][Aa][Kk]|-*|\#*\#|*.sw[nop])
             return 1
             ;;
         *)
