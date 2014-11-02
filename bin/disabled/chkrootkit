@@ -1,9 +1,12 @@
 #!/bin/sh
 #
-# wrapper sub-script to run security tool
+# chkrootkit
+# * wrapper script to run chkrootkit security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
+
+PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
 ########################################################################
 myname="${0##*/}"
@@ -13,24 +16,27 @@ mydir="${PWD%/}"
 cd "$current_wd"
 ########################################################################
 
-PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
-
 # load configurations and helper functions
 
-BASE_DIR="$(dirname $mydir)"
+BASE_DIR="$mydir"
 CONFIG_DIR="/etc/audit"
 CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+UTILS="${BASE_DIR}/utils"
 
 . "$CONFIG"
 . "$UTILS"
 
 check_root_user
 
-# run chkrootkit audit
+# run rkunter audit
 
-CHKROOTKIT=$(which chkrootkit || echo "")
+SCANNER=$(which chkrootkit)
+LOGFILE="${LOG_DIR:=/var/log/audit}/chkrootkit.log"
 
-[ "X$CHKROOTKIT" != "X" -a -x "$CHKROOTKIT" ] \
-    && run_tool "chkrootkit" "$CHKROOTKIT" \
-    || echo >&2 "# unable to execute command: chkrootkit"
+makedir "$(dirname $LOGFILE)"
+
+if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
+    "$SCANNER" | tee "$LOGFILE"
+else
+    error "Unable to execute command: $SCANNER"
+fi

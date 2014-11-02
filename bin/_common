@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# _common
+# * Common code for audit scripts.
+#
+# * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2014-11-01 kchan
+
+VERBOSE=1
+DEBUG=0
+errors=0
+dry_run=0
+
+BASE_DIR="$mydir"
+CONFIG_DIR="/etc/audit"
+CONFIG="${CONFIG_DIR}/run_audit.conf"
+UTILS="${BASE_DIR}/utils"
+DEFAULT_LOG_DIR="/var/log/audit"
+
+DIVIDER="########################################################################"
+SNIP="# ----------- [snip] -----------"
+
+if [ ! -f "$UTILS" ]; then
+    printf >&2 "### Utilities module not found: $UTILS\n"
+    exit 1
+fi
+. "$UTILS"
+
+if [ ! -f "$CONFIG" ]; then
+    cat <<EOF
+### Configuration file not found: $CONFIG
+# You must have a configuration file ($CONFIG)
+# for this script to run. A configuration file template is in
+# $CONFIG_DIR. Make a copy of the template and rename it as
+# $CONFIG, then run this script again.
+# Type '$0 --help' for usage informaton.
+EOF
+    exit 1
+fi
+. "$CONFIG"
+
+# make sure scripts are run by root
+check_root_user

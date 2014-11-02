@@ -1,11 +1,10 @@
 #!/bin/sh
 #
-# wrapper sub-script to run security tool
+# rkhunter
+# * wrapper script to run rkhunter security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
-
-PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
+# * updated: 2014-11-01 kchan
 
 ########################################################################
 myname="${0##*/}"
@@ -15,31 +14,33 @@ mydir="${PWD%/}"
 cd "$current_wd"
 ########################################################################
 
-# load configurations and helper functions
+PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
-BASE_DIR="$(dirname $mydir)"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+########################################################################
+# load common code
 
-. "$CONFIG"
-. "$UTILS"
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
 
-check_root_user
-
+########################################################################
 # run rkunter audit
 
-RKHUNTER_LOGFILE="/var/log/rkhunter.log"
+SCANNER=$(which rkhunter)
+LOGFILE="${LOG_DIR:=/var/log/audit}/rkhunter.log"
 
-run_rkhunter()
-{
-    "$RKHUNTER" --update --nocolors --skip-keypress
-    "$RKHUNTER" --cronjob
-    cat "$RKHUNTER_LOGFILE"
-}
+makedir "$(dirname $LOGFILE)"
 
-RKHUNTER=$(which rkhunter || echo "")
-
-[ "X$RKHUNTER" != "X" -a -x "$RKHUNTER" ] \
-    && run_tool "rkhunter" "run_rkhunter" \
-    || error "unable to execute command: rkhunter"
+if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
+    "$SCANNER" --cronjob --logfile "$LOGFILE"
+    if [ -f "$LOGFILE" ]; then
+        cat "$LOGFILE"
+    else
+        error "Scan results not found: $LOGFILE\n"
+    fi
+else
+    error "Unable to execute command: $SCANNER"
+fi

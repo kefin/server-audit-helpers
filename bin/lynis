@@ -1,9 +1,10 @@
 #!/bin/sh
 #
-# wrapper sub-script to run security tool
+# lynis
+# * wrapper script to run lynis security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
 
 ########################################################################
 myname="${0##*/}"
@@ -15,34 +16,31 @@ cd "$current_wd"
 
 PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
-# load configurations and helper functions
+########################################################################
+# load common code
 
-BASE_DIR="$(dirname $mydir)"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
 
-. "$CONFIG"
-. "$UTILS"
-
-check_root_user
-
+########################################################################
 # run lynis audit
 
-LYNIS=$(which lynis || echo "")
+SCANNER=$(which lynis)
+LOGFILE="${LOG_DIR:-/var/log/audit}/lynis.log"
 
-run_lynis()
-{
-    if [ "X$LYNIS_DIR" != "X" ]; then
-        currend_wd=$(pwd)
-        cd "$LYNIS_DIR"
-        "$LYNIS" -c -Q --auditor "$AUDITOR" --cronjob
-        cd "$current_wd"
+makedir "$(dirname $LOGFILE)"
+
+if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
+    "$SCANNER" -c -Q --auditor "$AUDITOR" --logfile "$LOGFILE" --cronjob
+    if [ -f "$LOGFILE" ]; then
+        cat "$LOGFILE"
     else
-        "$LYNIS" -c -Q --auditor "$AUDITOR" --cronjob
+        error "Scan results not found: $LOGFILE\n"
     fi
-}
-
-[ "X$LYNIS" != "X" -a -x "$LYNIS" ] \
-    && run_tool "lynis" "run_lynis" \
-    || error "unable to execute command: lynis"
+else
+    error "Unable to execute command: $SCANNER"
+fi

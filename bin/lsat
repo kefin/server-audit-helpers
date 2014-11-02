@@ -1,9 +1,10 @@
 #!/bin/sh
 #
-# wrapper sub-script to run security tool
+# lsat
+# * wrapper script to run lsat security tool
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
 
 ########################################################################
 myname="${0##*/}"
@@ -15,43 +16,34 @@ cd "$current_wd"
 
 PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
-# load configurations and helper functions
+########################################################################
+# load common code
 
-BASE_DIR="$(dirname $mydir)"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
 
-. "$CONFIG"
-. "$UTILS"
-
-check_root_user
-
+########################################################################
 # run lsat audit
 
-LSAT=$(which lsat || echo "")
+SCANNER=$(which lsat)
+LOGFILE="${LOG_DIR:-/var/log/audit}/lsat.out"
 
-divider="########################################################################"
+makedir "$(dirname $LOGFILE)"
 
-run_lsat()
-{
-    current_wd=$(pwd)
-    cd "$LOG_DIR"
-    lsat_output="lsat.out"
-    {
-        "$LSAT" && {
-            if [ -f "$lsat_output" ]; then
-                echo
-                echo "$divider"
-                echo "# lsat_output"
-                cat "$lsat_output"
-                echo "$divider"
-            fi
-        }
-    } 2>&1
-    cd "$current_wd"
-}
-
-[ "X$LSAT" != "X" -a -x "$LSAT" ] \
-    && run_tool "lsat" "run_lsat" \
-    || error "unable to execute command: lsat"
+if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
+    "$SCANNER" -o "$LOGFILE"
+    if [ -f "$LOGFILE" ]; then
+        echo
+        echo "$DIVIDER"
+        cat "$LOGFILE"
+        echo "$DIVIDER"
+    else
+        error "Scan results not found: $LOGFILE"
+    fi
+else
+    error "Unable to execute command: $SCANNER"
+fi

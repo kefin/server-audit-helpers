@@ -18,7 +18,7 @@ cd "$current_wd"
 # configurations for run_audit script
 
 # email addresses to send reports to
-EMAIL="root"
+RECIPIENTS="root"
 
 # email subject
 SUBJECT="$(hostname) audit report"
@@ -26,11 +26,14 @@ SUBJECT="$(hostname) audit report"
 # audit log directory
 LOG_DIR="/var/log/audit"
 
-# configurations  for lynis
-# * define lynis directory if executable is not installed in standard
-#   location (set this if lynis is installled manually on CentOS).
-LYNIS_DIR=
+# default scripts to run on 'run_audit'
+DEFAULT_AUDIT_SCRIPTS="
+rkhunter
+lynis
+"
+
+# configurations for lynis
 # auditor for lynis (should not need to change this)
-AUDITOR="root daily cron job"
+AUDITOR="daily cron job"
 
 ########################################################################

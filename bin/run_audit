@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-29 kchan
+# * updated: 2014-11-01 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -20,47 +20,130 @@ mydir="${PWD%/}"
 cd "$current_wd"
 ########################################################################
 
-
 ########################################################################
 # helper functions
+
+VERSION="0.3.0"
+AUTHORS="Kevin Chan <kefin@makedostudio.com>"
+
+show_version()
+{
+    printf "# script : %s\n" "$myname"
+    printf "# version: %s\n" "$VERSION"
+    printf "# authors: %s\n" "$AUTHORS"
+    exit 0
+}
 
 usage()
 {
     cat <<EOF
-# Script to run audit tools and email reports to sysadmin
+# Script to run audit tools and email reports to sysadmin.
 #
-# Usage: $myname scripts
-#   -h              # display usage
-#   -X|--dry-run    # do dry-run
+# Usage: $myname [options] scripts
+#   -h|--helo       # display usage
+#   -X|--dry-run    # do dry run
+#   -v|--verbose    # print verbose diagnostic messages (this is the default)
+#   -q|--quiet      # no output (sets verbose to 0)
+#   -n|--no-email   # do not email reports
+#   -D|--debug      # output debug messages
+#
+# Notes:
+# * This script will read configuration settings in /etc/audit/${myname}.conf.
+# * If DEFAULT_AUDIT_SCRIPTS is defined in the configuration file, $myname
+#   will run the scripts when called without supplied script parameters.
+# * If DEFAULT_AUDIT_SCRIPTS is undefined, $myname will run all scripts
+#   in the package scripts directory.
+#
+# Examples:
+# To run all scripts defined in DEFAULT_AUDIT_SCRIPTS or in the
+# /usr/local/audit/bin directory (if DEFAULT_AUDIT__SCRIPTS is not defined):
+#
+#   /usr/local/audit/bin/run_audit
+#
+# To run only certain scripts:
+#
+#   /usr/local/audit/bin/run_audit rkhunter lynis
+#
+# To run scripts and omit email reports:
+#
+#   /usr/local/audit/bin/run_audit -n rkhunter lynis
+#
 EOF
     exit 1
 }
 
+
 ########################################################################
-# run audit sub-scripts
+# load common code
 
-errors=0
-debug=0
-dry_run=0
-
-# load config
-
-BASE_DIR="$(dirname $mydir)"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/bin/utils"
-
-[ ! -f "$CONFIG" ] && error "Configuration file not found: $CONFIG"
-. "$CONFIG"
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
 
 
-# error function
+########################################################################
+# parse parameters
 
-exec_error()
+tmpfile=
+email_report=1
+scripts=
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        -V|--version)
+            show_version
+            ;;
+        -\?|-h|-help|--help)
+            usage
+            ;;
+        -v|--verbose)
+            verbose=1
+            ;;
+        -q|--quiet)
+            verbose=0
+            ;;
+        -X|--dry-run)
+            dry_run=1
+            ;;
+        -D|--debug)
+            debug=1
+            ;;
+        -n|--no-email|--no-report)
+            email_report=0
+            ;;
+        -*)
+            error "Unknown option: $1"
+            ;;
+        *)
+            scripts="$scripts $1"
+            ;;
+    esac
+    shift
+done
+
+if [ $dry_run -ne 0 ]; then
+    verbose=1
+    printf >&2 "# dry run ..."
+fi
+
+cleanup()
 {
-    printf >&2 "%s\n" "# script error: $1"
-    $((errors + 1))
+    [ -f "$tmpfile" ] && rm -f "$tmpfile"
 }
+
+if [ $dry_run -eq 0 ]; then
+    tmpfile="$(create_tmpfile)"
+fi
+
+trap "cleanup" EXIT
+
+
+########################################################################
+# set vars and define functions
 
 # functions to test if sub-script exists and is executable
 # * is_executable does minimal filtering and checks if script
@@ -87,7 +170,7 @@ is_audit_script()
     local script="$1"
     [ -x "$script" ] || return 1
     case "${script##*/}" in
-        $myname|utils|dummy|*~|*[._-][Bb][Aa][Kk]|-*|\#*\#|*.sw[nop])
+        $myname|utils|dummy|_*|*~|*[._-][Bb][Aa][Kk]|-*|\#*\#|*.sw[nop])
             return 1
             ;;
         *)
@@ -96,66 +179,91 @@ is_audit_script()
     esac
 }
 
-# function to run sub-script
+# function to execute script and send results by email
+# parameters:
+# * script (full path to executable audit script)
+# * exits 0 if no errors, else 1
 
 run_script()
 {
     local script="$1"
-    echo >&2 "# running $script ..."
-    if [ $dry_run -eq 0 ]; then
-        "$script" || $((errors + 1))
+    local command_name="${script##*/}"
+    local exit_status=0
+
+    elog "# running $script ..."
+
+    if [ $dry_run -ne 0 ]; then
+        log "$script"
     else
-        echo "$script"
+        if [ "X$tmpfile" = "X" ]; then
+            tmpfile="$(create_tmpfile)"
+            dbg "# created tmpfile: $tmpfile"
+        fi
+        dbg "# tmpfile: $tmpfile"
+        {
+            printf "%s\n" $DIVIDER
+            printf "# Script : $command_name\n"
+            printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "\n"
+            tstart=$(date +'%s')
+            if [ -x "$script" ]; then
+                "$script" || exit_status=1
+            else
+                printf "### Unable to run script: $script\n"
+            fi
+            tfinish=$(date +'%s')
+            elapsed=$(expr "$tfinish" - "$tstart" \
+                | awk '{printf("%02dm%02ds\n", $1/60, $1%60);}')
+            printf "\n"
+            printf "# Finish : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "# Elapsed: $elapsed\n"
+            printf "%s\n" $DIVIDER
+            printf "\n"
+        } >"$tmpfile" 2>&1
+        if [ $email_report -ne 0 ]; then
+            recipients="${EMAIL:-$RECIPIENTS}"
+            if [ "X$recipients" != "X" ]; then
+                if [ "X$SUBJECT" != "X" ]; then
+                    subject="$SUBJECT - ${command_name}"
+                else
+                    subject="${command_name} output"
+                fi
+                for email in $recipients
+                do
+                    notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
+                done
+            fi
+        else
+            cat "$tmpfile"
+        fi
     fi
-    echo >&2 "# done."
+
+    elog "# done."
+    elog ""
+
+    return $exit_status
 }
 
 
-# parse parameters
+########################################################################
+# loop through scripts and run each one
 
-scripts=
-
-while [ $# -gt 0 ]
-do
-    case "$1" in
-        -\?|-h|-help|--help)
-            usage
-            ;;
-        -X|--dry-run)
-            dry_run=1
-            ;;
-        -*)
-            error "Unknown optin: $1"
-            ;;
-        *)
-            s="${mydir}/$1"
-            [ ! -f "$s" ] && error "Script not found: $s"
-            scripts="$scripts $1"
-            ;;
-    esac
-    shift
-done
-
-
-if [ $dry_run -ne 0 ]; then
-    printf >&2 "# dry run ..."
-fi
+# if no scripts are supplied as parameters, check if
+# DEFAULT_AUDIT_SCRIPTS is defined and use that list.
+# if not defined, loop through scripts in audit bin directory
+# and add all runnable scripts.
 
 if [ "X$scripts" = "X" ]; then
-    # if no scripts are supplied as parameters, check if
-    # DEFAULT_AUDIT_SCRIPTS is defined and use that list.
-    # if not defined, loop through scripts in audit bin directory
-    # and add all runnable scripts.
     if [ "X$DEFAULT_AUDIT_SCRIPTS" != "X" ]; then
         scripts="$DEFAULT_AUDIT_SCRIPTS"
     else
-        for _script in $(find "$mydir" -type f -print | sort)
+        find "$BASE_DIR" -type f -print | sort | while read _script
         do
             case "$_script" in
                 *disabled/*)
                     ;;
                 *)
-                    if is_audit_script "$script"; then
+                    if is_audit_script "$_script"; then
                         _script_name="${_script##*/}"
                         scripts="$scripts $_script_name"
                     fi
@@ -165,17 +273,24 @@ if [ "X$scripts" = "X" ]; then
     fi
 fi
 
-
-# loop through scripts and run each one
-
 for s in $scripts
 do
-    script="${mydir}/${s}"
-    is_executable "$script" \
-        && run_script "$script" \
-        || exec_error "$script"
+    dbg "# checking script: $s"
+    script="${BASE_DIR}/${s}"
+    dbg "# script path: $s"
+    if is_executable "$script"; then
+        run_script "$script" || errors=$((errors + 1))
+    else
+        printf >&2 "# %s\n" "Script is not executable: $script"
+        errors=$((errors + 1))
+    fi
 done
 
-[ "$errors" -eq 0 ] && status=0 || status=1
+if [ "$errors" -eq 0 ]; then
+    status=0
+else
+    elog "# errors: $errors"
+    status=1
+fi
 
 exit $status

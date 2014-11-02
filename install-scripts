@@ -5,24 +5,62 @@
 # * configuration files are installed in /etc/audit
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-27 kchan
+# * updated: 2014-11-01 kchan
 
 ########################################################################
-myname=$(basename "$0")
-OLD_PWD=$PWD
+myname="${0##*/}"
+current_wd=$PWD
 cd $(dirname "$0")
-mydir=${PWD%/}
-cd "$OLD_PWD"
+mydir="${PWD%/}"
+cd "$current_wd"
 ########################################################################
 
 
 ########################################################################
 # helper functions
 
+verbose=1
+debug=0
+
+usage()
+{
+    cat <<EOF
+# Usage: $myname [options]
+# options:
+#   -q|--quiet     # do out print diagnostic/progress output (defaut is verbose)
+#   -y|--yes       # install without interactive prompting (assume "yes")
+#   -X|--dry-run   # do dry run
+#
+# Install script-config scripts.
+EOF
+    exit 1
+}
+
 error()
 {
     [ "$1" ] && echo >&2 "###" "$@"
     exit 1
+}
+
+elog()
+{
+    if [ "$verbose" -eq 1 ]; then
+        printf >&2 "%s\n" "$*"
+    fi
+}
+
+log()
+{
+    if [ "$verbose" -eq 1 ]; then
+        printf "%s\n" "$*"
+    fi
+}
+
+dbug()
+{
+    if [ "$debug" -ne 0 ]; then
+        printf >&2 "%s\n" "$*"
+    fi
 }
 
 check_root_user()
@@ -35,19 +73,47 @@ makedir()
     [ "$1" ] && [ ! -d "$1" ] && mkdir -p "$1"
 }
 
+make_symlink()
+{
+    local _src="$1"
+    local _dst="$2"
+    local _dst_dir=$(dirname "$_dst")
+    if [ ! -d "$_dst_dir" ]; then
+        mkdir -p "$_dst_dir" && elog "# Created directory: $_dst_dir"
+    fi
+    [ -f "$_dst" ] && rm "$_dst"
+    ln -s "$_src" "$_dst" && {
+        elog "# Created symlink:"
+        elog "# src: $_src"
+        elog "# dst: $_dst"
+    }
+}
 
 ########################################################################
 
+### check user permissions
+
+# This script must be run by root
+check_root_user
+
+
 ### set vars
+
+USR_LOCAL_DIR="/usr/local"
+LOCAL_BIN_DIR="/usr/local/bin"
+LOCAL_SBIN_DIR="/usr/local/sbin"
+CONFIG_DIR="/etc"
 
 PACKAGE_NAME="audit"
 SRC_DIR="$mydir"
 SCRIPT_SRC_DIR="${SRC_DIR}/bin"
 CONFIG_SRC_DIR="${SRC_DIR}/conf"
-SCRIPT_DST_DIR="/usr/local/${PACKAGE_NAME}/bin"
-CONFIG_DST_DIR="/etc/${PACKAGE_NAME}"
+DST_DIR="${USR_LOCAL_DIR}/${PACKAGE_NAME}"
+SCRIPT_DST_DIR="${DST_DIR}/bin"
+CONFIG_DST_DIR="${CONFIG_DIR}/${PACKAGE_NAME}"
 INSTALL_DIRS="$SCRIPT_DST_DIR $SCRIPT_DST_DIR/disabled $CONFIG_DST_DIR"
 SCRIPTS="\
+    _common \
     run_audit \
     utils \
     dummy \
@@ -62,61 +128,159 @@ CONFIGS="run_audit.conf"
 SCRIPT_PERMS="700"
 CONFIG_PERMS="600"
 
+MAIN_SCRIPT="${SCRIPT_DST_DIR}/run_audit"
 
-### check user permissions
 
-check_root_user
+### parse parameters
+
+dry_run=0
+install=0
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        -\?|-h|-help|--help)
+            usage
+            ;;
+        y|yes|-y|--yes)
+            install=1
+            ;;
+        -X|--dry-run)
+            dry_run=1
+            ;;
+        -q|--quiet)
+            verbose=0
+            ;;
+        *)
+            error "Unrecognized option: $1"
+            ;;
+    esac
+    shift
+done
+
+if [ $dry_run -ne 0 ]; then
+    verbose=1
+fi
 
 
 ### install scripts
 
-if [ $# -eq 1 ]; then
-    answer="$1"
-else
-    printf "Do you want to install the backup scripts in $DST_DIR (Y/N)? "
+if [ $install -eq 0 ]; then
+    printf "This script will install the $PACKAGE_NAME scripts in $DST_DIR.\n"
+    printf "Do you want to proceed (Y/N)? "
     read answer
+    _answer=$(echo "$answer" | tr '[:upper:]' '[:lower:]')
+    case "$_answer" in
+        y|yes|-y|-yes|--yes)
+            install=1
+            ;;
+        n|no|-n|-no|--no)
+            ;;
+        *)
+            elog "# Unknown answer: $answer"
+            ;;
+    esac
 fi
 
-case $answer in
-    [Yy]|[Yy][Ee][Ss]|-[Yy]|-[Yy][Ee][Ss]|--[Yy][Ee][Ss])
-        ;;
-    [Nn]|[Nn][Oo]|-[Nn]|-[Nn][Oo]|--[Nn][Oo])
-        echo "# Cancelled."
-        exit 1
-        ;;
-    *)
-        echo "# Unknown answer. Cancelled."
-        exit 1
-        ;;
-esac
+if [ $install -eq 0 ]; then
+    elog "# Cancelled."
+    exit 1
+fi
 
+
+# do install
+
+if [ -x "$MAIN_SCRIPT" ]; then
+    if [ $(grep -c '^VERSION=' "$MAIN_SCRIPT") -gt 0 ]; then
+        version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
+    else
+        version="# unknown version"
+    fi
+    elog ""
+    elog "# Found existing package: $PACKAGE_NAME"
+    elog "# Main script: $MAIN_SCRIPT"
+    elog "$version"
+fi
 
 errors=0
+
+elog ""
+elog "# Creating package directories ..."
+elog "# --------------------------------------------------------------"
 
 for d in $INSTALL_DIRS
 do
     if [ ! -d "$d" ]; then
-        makedir "$d"
-        echo "# Created directory $d"
+        if [ $dry_run -eq 0 ]; then
+            makedir "$d"
+            elog "# Created directory $d"
+        else
+            elog "mkdir -p $d"
+        fi
+    else
+        elog "# Directory already exists: $d"
     fi
 done
 
-for file in $SCRIPTS
+elog "# Done."
+
+# install scripts
+
+elog ""
+elog "# Installing scripts ..."
+elog "# --------------------------------------------------------------"
+
+scripts_dir="${SCRIPT_SRC_DIR%/}"
+if [ ! -d "$scripts_dir" ]; then
+    error "Cannot find scripts directory: $scripts_dir"
+fi
+
+for script in $SCRIPTS
 do
-    src="${SCRIPT_SRC_DIR}/$file"
-    dst="${SCRIPT_DST_DIR}/$file"
-    install -m "$SCRIPT_PERMS" "$src" "$dst" \
-        && echo "# $file installed as $dst"
+    path="${SCRIPT_SRC_DIR}/${script}"
+    src="$path"
+    relpath="${script##$scripts_dir/}"
+    dst="${SCRIPT_DST_DIR}/${relpath}"
+    if [ $dry_run -eq 0 ]; then
+        install -m "$SCRIPT_PERMS" "$src" "$dst" \
+            && elog "# installed $dst"
+    else
+        elog "install -m \"$SCRIPT_PERMS\" \"$src\" \"$dst\""
+    fi
 done
 
-for file in $CONFIG_TEMPLATES
+elog "# Done."
+
+# install configs
+
+elog ""
+elog "# Installing configuration files ..."
+elog "# --------------------------------------------------------------"
+
+find "$CONFIG_SRC_DIR" -type f | while read file
 do
-    src="${CONFIG_SRC_DIR}/$file"
-    dst="${CONFIG_DST_DIR}/$file"
-    install -m "$CONFIG_PERMS" "$src" "$dst" \
-        && echo "# $file installed as $dst"
+    path=$(echo "$file" | sed -e "s@${CONFIG_SRC_DIR}@@")
+    d=$(dirname "$path")
+    d="${CONFIG_DST_DIR}${d}"
+    if [ ! -d "$d" ]; then
+        if [ $dry_run -eq 0 ]; then
+            makedir "$d"
+            elog "# Created directory $d"
+        else
+            elog "mkdir -p $d"
+        fi
+    fi
+    src="$file"
+    dst="${CONFIG_DST_DIR}${path}"
+    if [ $dry_run -eq 0 ]; then
+        install -m "$CONFIG_PERMS" "$src" "$dst" \
+            && elog "# installed $dst"
+    else
+        elog "install -m \"$CONFIG_PERMS\" \"$src\" \"$dst\""
+    fi
 done
 
+elog "# Done."
 
 # create configuration file if it doesn't exist
 
@@ -125,17 +289,26 @@ do
     src="${CONFIG_SRC_DIR}/${file}${TEMPLATE_SUFFIX}"
     dst="${CONFIG_DST_DIR}/${file}"
     if [ ! -f "$src" ]; then
-        echo >&2 "### Cannot find configuration template: $src"
+        elog "### Cannot find configuration template: $src"
         errors=$((errors + 1))
     else
         if [ ! -f "$dst" ]; then
             install -m "$CONFIG_PERMS" "$src" "$dst" \
                 && {
-                    echo "# Created configuration file:  $dst"
-                    echo "# Please edit according to your settings."
+                    elog "# Created configuration file:  $dst"
+                    elog "# Please edit according to your settings."
                 }
         fi
     fi
 done
+
+if [ -x "$MAIN_SCRIPT" ]; then
+    version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
+    elog ""
+    elog "# Installed package: $PACKAGE_NAME"
+    elog "# Main script: $MAIN_SCRIPT"
+    elog "$version"
+    elog ""
+fi
 
 exit $errors

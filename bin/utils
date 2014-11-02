@@ -5,17 +5,41 @@
 # helper functions for audit scripts
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-10-30 kchan
+# * updated: 2014-11-01 kchan
 
 myname="${0##*/}"
 
 ########################################################################
 # helper functions
 
+verbose="${VERBOSE:-0}"
+debug="${DEBUG:-0}"
+
 error()
 {
     [ "$1" ] && printf >&2 "### %s\n" "$*"
     exit 1
+}
+
+elog()
+{
+    if [ "$verbose" -eq 1 ]; then
+        printf >&2 "%s\n" "$*"
+    fi
+}
+
+log()
+{
+    if [ "$verbose" -eq 1 ]; then
+        printf "%s\n" "$*"
+    fi
+}
+
+dbg()
+{
+    if [ "$debug" -ne 0 ]; then
+        printf >&2 "%s\n" "$*"
+    fi
 }
 
 check_file()
@@ -38,6 +62,11 @@ check_root_user()
     [ $(id -u) != 0 ] && error "Script must be run by root."
 }
 
+is_integer()
+{
+    [ $(expr "$1" : '^[0-9][0-9]*$') -gt 0 ] && return 0 || return 1
+}
+
 # notify script is part of the backup-scripts package
 NOTIFY="/usr/local/bin/notify"
 MAIL="$(which mail)"
@@ -58,107 +87,90 @@ notify()
 
 create_tmpfile()
 {
-    local tmpfile=$(mktemp -q "/tmp/${myname}.XXXXXX")
+    local tmpdir="${TMPDIR:-/tmp}"
+    local tmpfile=$(mktemp -q "${tmpdir}/${myname}.XXXXXX")
     [ $? -ne 0 ] && error "Can't create temp file, exiting..."
     #touch "$tmpfile"
     echo "$tmpfile"
 }
 
+# function to compare version strings
 
-# function to execute command and send results by email
-# parameters:
-# * command_name
-# * command(s)
-# * options:
-#     --no-log   # do not create log
-#     --no-email # do not email log
-#     --quiet    # do not create log and do not send email report
-#                # --quiet is equivalent to --no-log --no-email
+# version strings should be (major, minor, revision)
+# e.g. 0.1.3
+# 
+# usage:
+# cmp_versions "ver1" "ver2"
+# e.g. cmp_versions 1.0 1.0.1
+#
+# returns 0 if ver1 == ver2
+# returns 1 if ver1 > ver2
+# returns 2 if vers1 < ver2
+# returns 3 if error
 
-DIVIDER="########################################################################"
-DEFAULT_LOG_DIR="/var/log/audit"
-
-run_tool()
+cmp_versions()
 {
-    local command_name="$1"; shift
-    local command="$1"; shift
-    local log_dir=
-    local subject=
-    local no_log=0
-    local no_email=0
+   local _v1="$1"
+   local _v2="$2"
 
-    while [ $# -gt 0 ]
-    do
-        case "$1" in
-            -q|--quiet)
-                no_log=1
-                no_email=1
-                ;;
-            --no-log)
-                no_log=1
-                ;;
-            --no-email)
-                no_email=1
-                ;;
-            *)
-                ;;
-        esac
-        shift
-    done
+   local _v1_vars _v1_major _v1_minor _v1_rev
+   _v1_vars=$(echo "$_v1" | awk -F. \
+       'NF>0 && NF<=3 {
+            printf("_v1_major=%s _v1_minor=%s _v1_rev=%s", $1, $2, $3);
+       }')
+   eval "$_v1_vars"
+   [ "X$_v1_minor" = "X" ] && _v1_minor=0
+   [ "X$_v1_rev" = "X" ] && _v1_rev=0
+   if ! is_integer "$_v1_major" \
+       || ! is_integer "$_v1_minor" \
+       || ! is_integer "$_v1_rev"; then
+       dbg "# Bad version string: $_v1"
+       return 3
+   fi
+   dbg "# _v1_vars: $_v1_vars"
+   dbg "#    major: $_v1_major"
+   dbg "#    minor: $_v1_minor"
+   dbg "#      rev: $_v1_rev"
 
-    if [ $no_log -ne 0 ] && [ $no_email -ne 0 ]; then
-        if [ "X$command" != "X" ]; then
-            $command
-        else
-            printf >&2 "No command to run.\n"
-        fi
-    else
-        local tmpfile=$(create_tmpfile)
-        trap "rm -f $tmpfile" EXIT
-        {
-            printf "%s\n" $DIVIDER
-            printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
-            printf "\n"
-            tstart=$(date +'%s')
-            if [ "X$command" != "X" ]; then
-                $command
-            else
-                printf "No command to run.\n"
-            fi
-            tfinish=$(date +'%s')
-            elapsed=$(expr "$tfinish" - "$tstart" \
-                | awk '{printf("%02dm%02ds\n", $1/60, $1%60);}')
-            printf "\n"
-            printf "# Finish : $(date '+%Y-%m-%d %H:%M:%S')\n"
-            printf "# Elapsed: $elapsed\n"
-            printf "%s\n" $DIVIDER
-            printf "\n"
-        } >"$tmpfile" 2>&1
-    fi
+   local _v2_vars _v2_major _v2_minor _v2_rev
+   _v2_vars=$(echo "$_v2" | awk -F. \
+       'NF>0 && NF<=3 {
+            printf("_v2_major=%s _v2_minor=%s _v2_rev=%s", $1, $2, $3);
+       }')
+   eval "$_v2_vars"
+   [ "X$_v2_minor" = "X" ] && _v2_minor=0
+   [ "X$_v2_rev" = "X" ] && _v2_rev=0
+   if ! is_integer "$_v2_major" \
+       || ! is_integer "$_v2_minor" \
+       || ! is_integer "$_v2_rev"; then
+       dbg "# Bad version string: $_v2"
+       return 3
+   fi
+   dbg "# _v2_vars: $_v2_vars"
+   dbg "#    major: $_v2_major"
+   dbg "#    minor: $_v2_minor"
+   dbg "#      rev: $_v2_rev"
 
-    if [ $no_log -eq 0 ]; then
-        if [ "X$LOG_DIR" != "X" ]; then
-            log_dir="$LOG_DIR"
-        else
-            log_dir="${DEFAULT_LOG_DIR}/${command_name}"
-        fi
-        log_dir="${log_dir%/}"
-        makedir "$log_dir"
-        cat "$tmpfile" >>"$log_dir/${command_name}.log"
-    fi
-
-    if [ $no_email -eq 0 ]; then
-        recipients="${EMAIL:=$RECIPIENTS}"
-        if [ "X$recipients" != "X" ]; then
-            if [ "X$SUBJECT" != "X" ]; then
-                subject="$SUBJECT - ${command_name} output"
-            else
-                subject="${command_name} output"
-            fi
-            for email in $recipients
-            do
-                notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
-            done
-        fi
-    fi
+   if [ "X$_v1_major" = "X" ] || [ "X$_v2_major" = "X" ] \
+       || [ "X$_v1_minor" = "X" ] || [ "X$_v2_minor" = "X" ]; then
+       return 3
+   fi
+   if [ $_v1_major -gt $_v2_major ]; then
+       return 1
+   fi
+   if [ $_v1_major -lt $_v2_major ]; then
+       return 2
+   fi
+   if [ $_v1_minor -gt $_v2_minor ]; then
+       return 1
+   fi
+   if [ $_v1_minor -lt $_v2_minor ]; then
+       return 2
+   fi
+   if [ $_v1_rev -gt $_v2_rev ]; then
+       return 1
+   fi
+   if [ $_v1_rev -lt $_v2_rev ]; then
+       return 2
+   fi
 }
