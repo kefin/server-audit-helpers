@@ -191,7 +191,11 @@ fi
 # do install
 
 if [ -x "$MAIN_SCRIPT" ]; then
-    version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
+    if [ $(grep -c '^VERSION=' "$MAIN_SCRIPT") -gt 0 ]; then
+        version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
+    else
+        version="# unknown version"
+    fi
     elog ""
     elog "# Found existing package: $PACKAGE_NAME"
     elog "# Main script: $MAIN_SCRIPT"
