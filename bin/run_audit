@@ -23,6 +23,17 @@ cd "$current_wd"
 ########################################################################
 # helper functions
 
+VERSION="0.3.0"
+AUTHORS="Kevin Chan <kefin@makedostudio.com>"
+
+show_version()
+{
+    printf "# script : %s\n" "$myname"
+    printf "# version: %s\n" "$VERSION"
+    printf "# authors: %s\n" "$AUTHORS"
+    exit 0
+}
+
 usage()
 {
     cat <<EOF
@@ -83,6 +94,9 @@ scripts=
 while [ $# -gt 0 ]
 do
     case "$1" in
+        -V|--version)
+            show_version
+            ;;
         -\?|-h|-help|--help)
             usage
             ;;
