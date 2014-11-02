@@ -35,7 +35,7 @@ LOGFILE="${LOG_DIR:-/var/log/audit}/lsat.out"
 makedir "$(dirname $LOGFILE)"
 
 if [ "X$SCANNER" != "X" ] && [ -x "$SCANNER" ]; then
-    "$LSAT" -o "$LOGFILE"
+    "$SCANNER" -o "$LOGFILE"
     if [ -f "$LOGFILE" ]; then
         echo
         echo "$DIVIDER"
