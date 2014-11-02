@@ -193,7 +193,8 @@ fi
 if [ -x "$MAIN_SCRIPT" ]; then
     version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
     elog ""
-    elog "# Found existing script: $MAIN_SCRIPT"
+    elog "# Found existing package: $PACKAGE_NAME"
+    elog "# Main script: $MAIN_SCRIPT"
     elog "$version"
 fi
 
@@ -300,8 +301,10 @@ done
 if [ -x "$MAIN_SCRIPT" ]; then
     version=$("$MAIN_SCRIPT" -V || echo "# unknown version")
     elog ""
-    elog "# Installed script: $MAIN_SCRIPT"
+    elog "# Installed package: $PACKAGE_NAME"
+    elog "# Main script: $MAIN_SCRIPT"
     elog "$version"
+    elog ""
 fi
 
 exit $errors
