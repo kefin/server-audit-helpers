@@ -99,14 +99,6 @@ fi
 . "$CONFIG"
 
 
-# error function
-
-exec_error()
-{
-    printf >&2 "%s\n" "# script error: $1"
-    errors=$((errors + 1))
-}
-
 # functions to test if sub-script exists and is executable
 # * is_executable does minimal filtering and checks if script
 #   is executable
@@ -231,9 +223,6 @@ do
             error "Unknown option: $1"
             ;;
         *)
-            s="${BASE_DIR}/$1"
-            [ ! -f "$s" ] && error "Script not found: $s"
-            [ ! -x "$s" ] && error "Script not executable: $s"
             scripts="$scripts $1"
             ;;
     esac
@@ -279,7 +268,8 @@ do
     if is_executable "$script"; then
         run_script "$script" || errors=$((errors + 1))
     else
-        exec_error "$script"
+        printf >&2 "# %s\n" "Script is not executable: $script"
+        errors=$((errors + 1))
     fi
 done
 
