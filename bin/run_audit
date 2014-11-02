@@ -170,10 +170,10 @@ is_audit_script()
     local script="$1"
     [ -x "$script" ] || return 1
     case "${script##*/}" in
-        $myname|utils|dummy|*~|*[._-][Bb][Aa][Kk]|-*|\#*\#|*.sw[nop])
+        $myname|utils|dummy|_*|*~|*[._-][Bb][Aa][Kk]|-*|\#*\#|*.sw[nop])
             return 1
             ;;
-        *|_*)
+        *)
             return 0
             ;;
     esac
