@@ -89,7 +89,7 @@ if [ ! -f "$CONFIG" ]; then
     cat <<EOF
 ### Configuration file not found: $CONFIG
 # You must have a $CONFIG file for this script to run.
-# A template configuration file is is in $CONFIG_DIR.
+# A configuration file template is in $CONFIG_DIR.
 # Make a copy of the template and rename it as $CONFIG,
 # then run this script again.
 # Type '$0 --help' for usage informaton.
