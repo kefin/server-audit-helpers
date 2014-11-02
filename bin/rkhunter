@@ -6,8 +6,6 @@
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
 # * updated: 2014-11-01 kchan
 
-PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
-
 ########################################################################
 myname="${0##*/}"
 current_wd=$PWD
@@ -16,17 +14,16 @@ mydir="${PWD%/}"
 cd "$current_wd"
 ########################################################################
 
-# load configurations and helper functions
+PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
-BASE_DIR="$mydir"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/utils"
+# load common code
 
-. "$CONFIG"
-. "$UTILS"
-
-check_root_user
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
 
 # run rkunter audit
 

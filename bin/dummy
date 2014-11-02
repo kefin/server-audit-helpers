@@ -14,17 +14,15 @@ mydir="${PWD%/}"
 cd "$current_wd"
 ########################################################################
 
-# load configurations and helper functions
+# load common code
 
-BASE_DIR="$mydir"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/utils"
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
 
-. "$CONFIG"
-. "$UTILS"
-
-check_root_user
 
 # output message
 

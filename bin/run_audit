@@ -63,41 +63,20 @@ EOF
 }
 
 ########################################################################
-# run audit scripts
 
-# load utilities and configurations
+# load common code
 
-VERBOSE=1
-DEBUG=0
-
-BASE_DIR="$mydir"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/utils"
-DEFAULT_LOG_DIR="/var/log/audit"
-
-DIVIDER="########################################################################"
-
-errors=0
-dry_run=0
-email_report=1
-
-[ ! -f "$UTILS" ] && error "Utilities module not found: $UTILS"
-. "$UTILS"
-
-if [ ! -f "$CONFIG" ]; then
-    cat <<EOF
-### Configuration file not found: $CONFIG
-# You must have a configuration file ($CONFIG)
-# for this script to run. A configuration file template is in
-# $CONFIG_DIR. Make a copy of the template and rename it as
-# $CONFIG, then run this script again.
-# Type '$0 --help' for usage informaton.
-EOF
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
     exit 1
 fi
-. "$CONFIG"
+. "$AUDIT_COMMON"
 
+
+# set vars and define functions
+
+email_report=1
 
 # functions to test if sub-script exists and is executable
 # * is_executable does minimal filtering and checks if script
@@ -190,6 +169,8 @@ run_script()
     fi
 
     elog "# done."
+    elog ""
+
     return $exit_status
 }
 

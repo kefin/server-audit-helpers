@@ -16,24 +16,19 @@ cd "$current_wd"
 
 PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
 
-# load configurations and helper functions
+# load common code
 
-BASE_DIR="$mydir"
-CONFIG_DIR="/etc/audit"
-CONFIG="${CONFIG_DIR}/run_audit.conf"
-UTILS="${BASE_DIR}/utils"
-
-. "$CONFIG"
-. "$UTILS"
-
-check_root_user
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
 
 # run lsat audit
 
 SCANNER=$(which lsat)
 LOGFILE="${LOG_DIR:-/var/log/audit}/lsat.out"
-
-DIVIDER="########################################################################"
 
 makedir "$(dirname $LOGFILE)"
 

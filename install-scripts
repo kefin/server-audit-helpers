@@ -48,6 +48,7 @@ SCRIPT_DST_DIR="/usr/local/${PACKAGE_NAME}/bin"
 CONFIG_DST_DIR="/etc/${PACKAGE_NAME}"
 INSTALL_DIRS="$SCRIPT_DST_DIR $SCRIPT_DST_DIR/disabled $CONFIG_DST_DIR"
 SCRIPTS="\
+    _common \
     run_audit \
     utils \
     dummy \
