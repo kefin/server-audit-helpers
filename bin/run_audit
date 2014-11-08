@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-11-01 kchan
+# * updated: 2014-11-07 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -257,7 +257,10 @@ if [ "X$scripts" = "X" ]; then
     if [ "X$DEFAULT_AUDIT_SCRIPTS" != "X" ]; then
         scripts="$DEFAULT_AUDIT_SCRIPTS"
     else
-        find "$BASE_DIR" -type f -print | sort | while read _script
+        # changed to use `find ...` to avoid running loop in
+        # subshell ("scripts" will not set correctly in sub-shell).
+        # find "$BASE_DIR" -type f -print | sort | while read _script
+        for _script in $(find "$BASE_DIR" -type f -print | sort)
         do
             case "$_script" in
                 *disabled/*)
