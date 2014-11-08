@@ -105,7 +105,7 @@ create_tmpfile()
 #
 # returns 0 if ver1 == ver2
 # returns 1 if ver1 > ver2
-# returns 2 if vers1 < ver2
+# returns 2 if ver1 < ver2
 # returns 3 if error
 
 cmp_versions()
