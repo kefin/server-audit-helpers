@@ -49,4 +49,7 @@ AUDIT_REPORT_SUFFIX="-report.txt"
 # audit report perms for snapshots
 AUDIT_REPORT_PERMS="600"
 
+# number of archived snaphots days to preserve
+SNAPSHOT_DAYS_TO_KEEP=30
+
 ########################################################################
