@@ -271,7 +271,7 @@ prune_snapshots()
 
     dbg "# AUDIT_ARCHIVE_DIR: $AUDIT_ARCHIVE_DIR\n"
     dbg "# obsolete: $obsolete\n"
-    elog "# deleting snapshots before $obsolete (keeing $snapshots days)"
+    elog "# deleting snapshots before $obsolete (keeping $snapshots days)"
 
     today="$(date '+%Y%m%d')"
 
