@@ -36,4 +36,17 @@ lynis
 # auditor for lynis (should not need to change this)
 AUDITOR="daily cron job"
 
+
+# flag for saving audit reports in a daily snapshot archive (1 or 0)
+SAVE_AUDIT_SNAPSHOTS=1
+
+# audit snapshots archive directory
+AUDIT_ARCHIVE_DIR="/var/lib/audit"
+
+# audit report suffix to append to daily snapshot
+AUDIT_REPORT_SUFFIX="-report.txt"
+
+# audit report perms for snapshots
+AUDIT_REPORT_PERMS="600"
+
 ########################################################################

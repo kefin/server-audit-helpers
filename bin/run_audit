@@ -83,6 +83,8 @@ if [ ! -f "$AUDIT_COMMON" ]; then
 fi
 . "$AUDIT_COMMON"
 
+DEFAULT_AUDIT_ARCHIVE_DIR="/var/lib/audit"
+
 
 ########################################################################
 # parse parameters
@@ -145,6 +147,13 @@ trap "cleanup" EXIT
 ########################################################################
 # set vars and define functions
 
+if [ "X$AUDIT_ARCHIVE_DIR" = "X" ]; then
+    AUDIT_ARCHiVE_DIR="$DEFAULT_AUDIT_ARCHIVE_DIR"
+fi
+if [ ! -d "$AUDIT_ARCHIVE_DIR" ]; then
+    mkdir -p "$AUDIT_ARCHIVE_DIR"
+fi
+
 # functions to test if sub-script exists and is executable
 # * is_executable does minimal filtering and checks if script
 #   is executable
@@ -179,6 +188,23 @@ is_audit_script()
     esac
 }
 
+# save an audit report to the daily snapshot archive
+# usage: save_snapshot timestamp label report
+# * timestamp: YYYYMMDDHHMMSS
+# * lable: audit tool name
+# * report: audit tool output
+
+save_snapshot()
+{
+    [ "X$SAVE_AUDIT_SNAPSHOTS" != "X1" ] && return 1
+    local prefix="$1"
+    local label="$2"
+    local report="$3"
+    local suffix="$AUDIT_REPORT_SUFFIX"
+    local snapshot="${AUDIT_ARCHIVE_DIR}/${prefix}-${label}${suffix}"
+    cp "$report" "$snapshot" && chmod "${AUDIT_REPORT_PERMS:-600}" "$snapshot"
+}
+
 # function to execute script and send results by email
 # parameters:
 # * script (full path to executable audit script)
@@ -188,7 +214,9 @@ run_script()
 {
     local script="$1"
     local command_name="${script##*/}"
-    local exit_status=0
+    local status=0
+    local timestamp
+    local tstart tfinish elapsed
 
     elog "# running $script ..."
 
@@ -200,14 +228,15 @@ run_script()
             dbg "# created tmpfile: $tmpfile"
         fi
         dbg "# tmpfile: $tmpfile"
+        timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
         {
             printf "%s\n" $DIVIDER
             printf "# Script : $command_name\n"
-            printf "# Start  : $(date '+%Y-%m-%d %H:%M:%S')\n"
+            printf "# Start  : $timestamp\n"
             printf "\n"
             tstart=$(date +'%s')
             if [ -x "$script" ]; then
-                "$script" || exit_status=1
+                "$script" || status=1
             else
                 printf "### Unable to run script: $script\n"
             fi
@@ -236,12 +265,14 @@ run_script()
         else
             cat "$tmpfile"
         fi
+        timestamp="$(printf "%s" "$timestamp" | tr -cd '[:alnum:]_')"
+        save_snapshot "$timestamp" "${script##*/}" "$tmpfile"
     fi
 
     elog "# done."
     elog ""
 
-    return $exit_status
+    return $status
 }
 
 
@@ -276,6 +307,8 @@ if [ "X$scripts" = "X" ]; then
     fi
 fi
 
+# run audit scripts
+
 for s in $scripts
 do
     dbg "# checking script: $s"
@@ -290,10 +323,10 @@ do
 done
 
 if [ "$errors" -eq 0 ]; then
-    status=0
+    exit_status=0
 else
     elog "# errors: $errors"
-    status=1
+    exit_status=1
 fi
 
-exit $status
+exit $exit_status
