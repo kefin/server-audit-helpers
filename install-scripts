@@ -120,6 +120,7 @@ SCRIPTS="\
     lsat \
     lynis \
     rkhunter \
+    prune-archives \
     disabled/chkrootkit \
     disabled/tripwire"
 TEMPLATE_SUFFIX=".template"
