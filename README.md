@@ -1,6 +1,6 @@
 # Server Audit Helpers: README
 
-Latest version: 0.3.7  
+Latest version: 0.3.8  
 Author: Kevin Chan <kefin@makedostudio.com>
 
 This package resides at:
