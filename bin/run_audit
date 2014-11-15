@@ -23,7 +23,7 @@ cd "$current_wd"
 ########################################################################
 # helper functions
 
-VERSION="0.3.6"
+VERSION="0.3.7"
 AUTHORS="Kevin Chan <kefin@makedostudio.com>"
 
 show_version()
