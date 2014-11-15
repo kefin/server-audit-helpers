@@ -104,10 +104,11 @@ prune_snapshots()
         if is_integer "$datestamp" && is_integer "$obsolete"; then
             if [ $datestamp -lt $obsolete ]; then
                 dbg "# obsolete: %s\n" "$f"
-                rm -f "$f" && log "# deleted: $f"
+                rm -f "$f" && \
+                    log "# deleted: $f"
             else
-                dbg "# ok      : %s\n" "$f"
-                log "# ok      : %s\n" "$f"
+                dbg "# ok     : $f"
+                log "# ok     : $f"
             fi
         else
             error "error parsing files in $AUDIT_ARCHIVE_DIR"
