@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-11-13 kchan
+# * updated: 2014-11-15 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -23,7 +23,7 @@ cd "$current_wd"
 ########################################################################
 # helper functions
 
-VERSION="0.3.4"
+VERSION="0.3.6"
 AUTHORS="Kevin Chan <kefin@makedostudio.com>"
 
 show_version()
@@ -84,6 +84,7 @@ fi
 . "$AUDIT_COMMON"
 
 DEFAULT_AUDIT_ARCHIVE_DIR="/var/lib/audit"
+DEFAULT_SNAPSHOT_DAYS_TO_KEEP=30
 
 
 ########################################################################
@@ -152,11 +153,12 @@ trap "cleanup" EXIT
 # set vars and define functions
 
 if [ "X$AUDIT_ARCHIVE_DIR" = "X" ]; then
-    AUDIT_ARCHiVE_DIR="$DEFAULT_AUDIT_ARCHIVE_DIR"
+    AUDIT_ARCHIVE_DIR="$DEFAULT_AUDIT_ARCHIVE_DIR"
 fi
 if [ ! -d "$AUDIT_ARCHIVE_DIR" ]; then
     mkdir -p "$AUDIT_ARCHIVE_DIR"
 fi
+elog "# audit archive dir: $AUDIT_ARCHIVE_DIR"
 
 # determine what operating system we're running under
 #
@@ -242,11 +244,12 @@ save_snapshot()
     local report="$3"
     local suffix="$AUDIT_REPORT_SUFFIX"
     local snapshot="${AUDIT_ARCHIVE_DIR}/${prefix}-${label}${suffix}"
-    cp "$report" "$snapshot" && chmod "${AUDIT_REPORT_PERMS:-600}" "$snapshot"
+    cp "$report" "$snapshot" && chmod "${AUDIT_REPORT_PERMS:-600}" "$snapshot" \
+        && elog "# snapshot: $snapshot"
 }
 
 # prune snapshots -- delete old archived reports
-# usageL prun_snapshots days_to_keep
+# usage: prune_snapshots days_to_keep
 
 SYSTEM="$(get_os)"
 
@@ -367,6 +370,9 @@ run_script()
 ########################################################################
 # loop through scripts and run each one
 
+if [ "X$SNAPSHOT_DAYS_TO_KEEP" = "X" ]; then
+    SNAPSHOT_DAYS_TO_KEEP="$DEFAULT_SNAPSHOT_DAYS_TO_KEEP"
+fi
 if [ $prune -ne 0 ]; then
     prune_snapshots "$SNAPSHOT_DAYS_TO_KEEP"
     exit    
