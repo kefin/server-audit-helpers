@@ -5,7 +5,7 @@
 # * configuration files are installed in /etc/audit
 #
 # * created: 2012-02-05 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-11-01 kchan
+# * updated: 2014-11-15 kchan
 
 ########################################################################
 myname="${0##*/}"
@@ -298,6 +298,8 @@ do
                     elog "# Created configuration file:  $dst"
                     elog "# Please edit according to your settings."
                 }
+        else
+            elog "# Config exists (not replaced): $dst"
         fi
     fi
 done
