@@ -1,0 +1,121 @@
+#!/bin/sh
+#
+# prune-archives
+# * delete obsolete audit archive reports.
+#
+# * created: 2014-11-15 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2014-11-15 kchan
+
+########################################################################
+myname="${0##*/}"
+current_wd=$PWD
+cd $(dirname "$0")
+mydir="${PWD%/}"
+cd "$current_wd"
+########################################################################
+
+########################################################################
+# load common code
+
+AUDIT_COMMON="${mydir}/_common"
+if [ ! -f "$AUDIT_COMMON" ]; then
+    printf >&2 "### Audit common code module not found: $AUDIT_COMMON\n"
+    exit 1
+fi
+. "$AUDIT_COMMON"
+
+########################################################################
+# prune audit archives
+
+
+# determine what operating system we're running under
+#
+# usage:
+# system="$(get_os)"
+# if [ "$system" = "bsd" ]; then
+#     ...
+# fi
+
+get_os()
+{
+    local system=
+    case $(uname | tr '[:upper:]' '[:lower:]') in
+        linux)
+            system="linux"
+            ;;
+        *bsd)
+            system="bsd"
+            ;;
+        darwin)
+            system="macos"
+            ;;
+        *)
+            system="unknown"
+            ;;
+    esac
+    printf "%s" "$system"
+}
+
+is_integer()
+{
+    case "$1" in
+        *[!0-9]*) return 1 ;;
+    esac
+    return 0
+}
+
+# prune snapshots -- delete old archived reports
+# usage: prune_snapshots days_to_keep
+
+SYSTEM="$(get_os)"
+
+prune_snapshots()
+{
+    local snapshots="$1"
+    local today obsolete
+    local datestamp file
+
+    [ "X$AUDIT_ARCHIVE_DIR" = "X" ] && return 1
+
+    if [ "$SYSTEM" = "bsd" ]; then
+        obsolete=$(date -v"-${snapshots}d" '+%Y%m%d' || echo "")
+        if [ "X$obsolete" = "X" ]; then
+            obsolete=$(perl -MPOSIX=strftime -le \
+                'print strftime("%Y%m%d",
+                                localtime(time()-86400*'"${snapshots}"'))')
+        fi
+    else
+        obsolete=$(date --date "${snapshots} days ago" '+%Y%m%d')
+    fi
+
+    dbg "# AUDIT_ARCHIVE_DIR: $AUDIT_ARCHIVE_DIR\n"
+    dbg "# obsolete: $obsolete\n"
+    elog "# deleting snapshots before $obsolete (keeping $snapshots days)"
+
+    today="$(date '+%Y%m%d')"
+
+    find "$AUDIT_ARCHIVE_DIR" -type f \
+        -name '[0-9]*' -print | sort \
+        | egrep '^.+/[0-9]{14}-.+$' \
+        | while read f
+    do
+        file="${f##*/}"
+        datestamp="${file%%[0-9][0-9][0-9][0-9][0-9][0-9]-*}"
+        if is_integer "$datestamp" && is_integer "$obsolete"; then
+            if [ $datestamp -lt $obsolete ]; then
+                dbg "# obsolete: %s\n" "$f"
+                rm -f "$f" && elog "# deleted: $f"
+            else
+                dbg "# ok      : %s\n" "$f"
+            fi
+        else
+            error "error parsing files in $AUDIT_ARCHIVE_DIR"
+        fi
+    done
+}
+
+if [ "X$SNAPSHOT_DAYS_TO_KEEP" = "X" ]; then
+    SNAPSHOT_DAYS_TO_KEEP="$DEFAULT_SNAPSHOT_DAYS_TO_KEEP"
+fi
+
+prune_snapshots "$SNAPSHOT_DAYS_TO_KEEP"

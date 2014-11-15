@@ -30,6 +30,7 @@ LOG_DIR="/var/log/audit"
 DEFAULT_AUDIT_SCRIPTS="
 rkhunter
 lynis
+prune-snapshots
 "
 
 # configurations for lynis

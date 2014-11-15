@@ -4,7 +4,7 @@
 # * Common code for audit scripts.
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-11-01 kchan
+# * updated: 2014-11-15 kchan
 
 VERBOSE=1
 DEBUG=0
@@ -16,6 +16,8 @@ CONFIG_DIR="/etc/audit"
 CONFIG="${CONFIG_DIR}/run_audit.conf"
 UTILS="${BASE_DIR}/utils"
 DEFAULT_LOG_DIR="/var/log/audit"
+DEFAULT_AUDIT_ARCHIVE_DIR="/var/lib/audit"
+DEFAULT_SNAPSHOT_DAYS_TO_KEEP=30
 
 DIVIDER="########################################################################"
 SNIP="# ----------- [snip] -----------"

@@ -83,9 +83,6 @@ if [ ! -f "$AUDIT_COMMON" ]; then
 fi
 . "$AUDIT_COMMON"
 
-DEFAULT_AUDIT_ARCHIVE_DIR="/var/lib/audit"
-DEFAULT_SNAPSHOT_DAYS_TO_KEEP=30
-
 
 ########################################################################
 # parse parameters
@@ -93,7 +90,6 @@ DEFAULT_SNAPSHOT_DAYS_TO_KEEP=30
 tmpfile=
 email_report=1
 scripts=
-prune=0
 
 while [ $# -gt 0 ]
 do
@@ -118,9 +114,6 @@ do
             ;;
         -n|--no-email|--no-report)
             email_report=0
-            ;;
-        -p|--prune)
-            prune=1
             ;;
         -*)
             error "Unknown option: $1"
@@ -159,42 +152,6 @@ if [ ! -d "$AUDIT_ARCHIVE_DIR" ]; then
     mkdir -p "$AUDIT_ARCHIVE_DIR"
 fi
 elog "# audit archive dir: $AUDIT_ARCHIVE_DIR"
-
-# determine what operating system we're running under
-#
-# usage:
-# system="$(get_os)"
-# if [ "$system" = "bsd" ]; then
-#     ...
-# fi
-
-get_os()
-{
-    local system=
-    case $(uname | tr '[:upper:]' '[:lower:]') in
-        linux)
-            system="linux"
-            ;;
-        *bsd)
-            system="bsd"
-            ;;
-        darwin)
-            system="macos"
-            ;;
-        *)
-            system="unknown"
-            ;;
-    esac
-    printf "%s" "$system"
-}
-
-is_integer()
-{
-    case "$1" in
-        *[!0-9]*) return 1 ;;
-    esac
-    return 0
-}
 
 # functions to test if sub-script exists and is executable
 # * is_executable does minimal filtering and checks if script
@@ -247,53 +204,6 @@ save_snapshot()
     cp "$report" "$snapshot" && chmod "${AUDIT_REPORT_PERMS:-600}" "$snapshot" \
         && elog "# snapshot: $snapshot"
 }
-
-# prune snapshots -- delete old archived reports
-# usage: prune_snapshots days_to_keep
-
-SYSTEM="$(get_os)"
-
-prune_snapshots()
-{
-    local snapshots="$1"
-    local today obsolete
-    local datestamp file
-
-    [ "X$AUDIT_ARCHIVE_DIR" = "X" ] && return 1
-
-    if [ "$SYSTEM" = "bsd" ]; then
-        obsolete=$(date -v"-${snapshots}d" '+%Y%m%d' || echo "")
-        if [ "X$obsolete" = "X" ]; then
-            obsolete=$(perl -MPOSIX=strftime -le \
-                'print strftime("%Y%m%d",
-                                localtime(time()-86400*'"${snapshots}"'))')
-        fi
-    else
-        obsolete=$(date --date "${snapshots} days ago" '+%Y%m%d')
-    fi
-
-    dbg "# AUDIT_ARCHIVE_DIR: $AUDIT_ARCHIVE_DIR\n"
-    dbg "# obsolete: $obsolete\n"
-    elog "# deleting snapshots before $obsolete (keeping $snapshots days)"
-
-    today="$(date '+%Y%m%d')"
-
-    find "$AUDIT_ARCHIVE_DIR" -type f \
-        -name '[0-9]*' -print | sort \
-        | egrep '^.+/[0-9]{14}-.+$' \
-        | while read f
-    do
-        file="${f##*/}"
-        datestamp="${file%%[0-9][0-9][0-9][0-9][0-9][0-9]-*}"
-        if [ $datestamp -lt $obsolete ]; then
-            dbg "# obsolete: %s\n" "$f"
-            rm -f "$f" && elog "# deleted: $f"
-        else
-            dbg "# ok      : %s\n" "$f"
-        fi
-    done
-}
-
 
 # function to execute script and send results by email
 # parameters:
@@ -357,7 +267,6 @@ run_script()
         fi
         timestamp="$(printf "%s" "$timestamp" | tr -cd '[:alnum:]_')"
         save_snapshot "$timestamp" "${script##*/}" "$tmpfile"
-        prune_snapshots "$SNAPSHOT_DAYS_TO_KEEP"
     fi
 
     elog "# done."
@@ -369,15 +278,6 @@ run_script()
 
 ########################################################################
 # loop through scripts and run each one
-
-if [ "X$SNAPSHOT_DAYS_TO_KEEP" = "X" ]; then
-    SNAPSHOT_DAYS_TO_KEEP="$DEFAULT_SNAPSHOT_DAYS_TO_KEEP"
-fi
-if [ $prune -ne 0 ]; then
-    prune_snapshots "$SNAPSHOT_DAYS_TO_KEEP"
-    exit    
-fi
-
 
 # if no scripts are supplied as parameters, check if
 # DEFAULT_AUDIT_SCRIPTS is defined and use that list.
