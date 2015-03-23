@@ -112,17 +112,16 @@ DST_DIR="${USR_LOCAL_DIR}/${PACKAGE_NAME}"
 SCRIPT_DST_DIR="${DST_DIR}/bin"
 CONFIG_DST_DIR="${CONFIG_DIR}/${PACKAGE_NAME}"
 INSTALL_DIRS="$SCRIPT_DST_DIR $SCRIPT_DST_DIR/disabled $CONFIG_DST_DIR"
-SCRIPTS="\
-    _common \
-    run_audit \
-    utils \
-    dummy \
-    lsat \
-    lynis \
-    rkhunter \
-    prune-snapshots \
-    disabled/chkrootkit \
-    disabled/tripwire"
+SCRIPTS="
+_common
+run_audit
+utils
+dummy
+lsat
+lynis
+rkhunter
+prune-snapshots
+"
 TEMPLATE_SUFFIX=".template"
 CONFIG_TEMPLATES="run_audit.conf${TEMPLATE_SUFFIX}"
 CONFIGS="run_audit.conf"

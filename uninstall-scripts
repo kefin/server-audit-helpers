@@ -1,0 +1,99 @@
+#!/bin/sh
+#
+# script to uninstall scripts.
+#
+# * created: 2009-11-11 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2015-03-22 kchan
+
+########################################################################
+myname="${0##*/}"
+current_wd="$PWD"
+cd $(dirname "$0")
+mydir="${PWD%/}"
+cd "$current_wd"
+########################################################################
+
+
+########################################################################
+# helper functions
+
+error()
+{
+    [ "$1" ] && printf >&2 "### %s\n" "$*"
+    exit 1
+}
+
+check_file()
+{
+    [ ! -f "$1" ] && error "$myname - cannot find file: $1"
+}
+
+makedir()
+{
+    [ "$1" ] && [ ! -d "$1" ] && mkdir -p "$1"
+}
+
+########################################################################
+
+
+SCRIPTS="
+_common
+run_audit
+utils
+dummy
+lsat
+lynis
+rkhunter
+prune-snapshots
+disabled/chkrootkit
+disabled/tripwire
+"
+
+DST_DIR="/usr/local/audit"
+
+
+# check for root user
+
+if [ "$(id -u)" != "0" ]; then
+   error "This script must be run with root permissions."
+fi
+
+
+# confirm install
+
+if [ $# -eq 1 ]; then
+    answer="$1"
+else
+    # confirm
+    printf "Do you want to uninstall the backup scripts in $DST_DIR (Y/N)? "
+    read answer
+fi
+
+case $(echo "$answer" | tr '[:upper:]' '[:lower:]') in
+    y|yes|-y|-yes|--yes)
+        ;;
+    n|no|-n|-no|--no)
+        error "Cancelled."
+        ;;
+    *)
+        error "Unknown answer. Cancelled."
+        ;;
+esac
+
+
+# uninstall scripts
+
+for file in $SCRIPTS
+do
+    target="${DST_DIR}/${file}"
+    if [ -f "$target" ]; then
+        rm -f "$target" && printf >&2 "# %s\n" "deleted $target"
+    fi
+done
+
+count="$(find "$DST_DIR" -type f -print | wc -l)"
+if [ $count -eq 0 ]; then
+    rm -rf "$DST_DIR" && printf >&2 "# %s\n" "deleted directory: $DST_DIR"
+fi
+
+exit
