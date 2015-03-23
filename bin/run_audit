@@ -5,7 +5,7 @@
 # script to run audit tools and email reports to sysadmin
 #
 # * created: 2011-05-22 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-11-15 kchan
+# * updated: 2015-03-22 kchan
 #
 # Add to crontab to run script at regular intervals:
 #
@@ -187,6 +187,26 @@ is_audit_script()
     esac
 }
 
+# make sure email addresses are valid
+# * the "notify" email script we are using does not necessarily expand
+#   email aliases so we have to make sure email addresses are valid
+#   (with a @domain component).
+
+valid_email_address()
+{
+    local _email="$1"
+    case "$_email" in
+        *@?*.*)
+            # email contains @ and hopefully a domain name
+            :
+            ;;
+        *)
+            _email="${_email}@$(hostname)"
+            ;;
+    esac
+    printf "%s" "$_email"
+}
+
 # save an audit report to the daily snapshot archive
 # usage: save_snapshot timestamp label report
 # * timestamp: YYYYMMDDHHMMSS
@@ -259,6 +279,8 @@ run_script()
                 fi
                 for email in $recipients
                 do
+                    email="$(valid_email_address "$email")"
+                    dbg "# emailing to: $email"
                     notify "$email" "$(date '+%Y-%m-%d') $subject" "$tmpfile"
                 done
             fi

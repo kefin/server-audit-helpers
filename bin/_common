@@ -43,3 +43,9 @@ fi
 
 # make sure scripts are run by root
 check_root_user
+
+# make sure the "notify" email script exists or use mail
+notify=$(which notify)
+if [ "X$notify" = "X" ]; then
+    notify=$(which mail)
+fi
