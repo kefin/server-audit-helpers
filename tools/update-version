@@ -1,0 +1,174 @@
+#!/bin/sh
+#
+# update-version
+#
+# Script to update version string in sources.
+#
+# * created: 2014-11-06 Kevin Chan <kefin@makedostudio.com>
+# * updated: 2014-11-06 kchan
+
+########################################################################
+myname="${0##*/}"
+current_wd=$PWD
+cd $(dirname "$0")
+mydir="${PWD%/}"
+cd "$current_wd"
+########################################################################
+
+# set id flag for this module (modules loaded after this file can
+# check this var to ensure functions are loaded properly).
+__UPDATE_VERSION__=1
+
+
+########################################################################
+# configurations
+
+PACKAGE_DIR=$(dirname "$mydir")
+BASE_DIR="${PACKAGE_DIR}/bin"
+
+STRING_BASE="AUDIT_SCRIPTS_VERSION"
+REGEXP="^$STRING_BASE=\"[0-9\.]+\""
+
+
+########################################################################
+# helper functions
+
+usage()
+{
+    cat <<EOF
+# Script to update version string in sources.
+#
+# Usage: $myname [options] version-string
+# options:
+#    -p|--print    # print version strings (default)
+#    -c|--check    # check existing version string with new
+#    -u|--update   # update version string in sources
+#    -X|--dry-run  # do dry run
+
+EOF
+    exit 1
+}
+
+error()
+{
+    [ "$1" ] && printf >&2 "### %s\n" "$*"
+    exit 1
+}
+
+########################################################################
+
+
+# parse parameters
+
+dry_run=0
+
+# op is check, print, or update
+op="print"
+version=
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        -\?|-h|-help|--help)
+            usage
+            ;;
+        -c|--check)
+            op="check"
+            ;;
+        -p|--print)
+            op="print"
+            ;;
+        -u|--update)
+            op="update"
+            ;;
+        -X|--dry-run)
+            dry_run=1
+            ;;
+        *)
+            if [ "X$version" = "X" ]; then
+                version="$1"
+            else
+                error "Version string already defined: $version"
+            fi
+            ;;
+    esac
+    shift
+done
+
+if [ "$op" != "print" ] && [ "X$version" = "X" ]; then
+    error "No version string."
+fi
+
+if [ $dry_run -ne 0 ]; then
+    printf "# dry run ...\n"
+fi
+
+
+# use temp file
+
+tmpdir=${TMPDIR:-/tmp}
+tmpfile=$(mktemp -q "${tmpdir}/${myname}.XXXXXX") \
+    || error "Can't create temp file, exiting..."
+cleanup()
+{
+    rm -f "$tmpfile"
+}
+trap "cleanup" EXIT
+
+
+# do updates
+
+find "$BASE_DIR" -type f \
+    ! -name '*~' -a ! -name '#*#' -a ! -name '*.sw[nop]' -a \
+    ! -name '*.[bB][aA][kK]' -a ! -name '.*' \
+    | sort | while read file
+do
+    case "$op" in
+        check)
+            vers=$(egrep "$REGEXP" "$file")
+            if [ "X$vers" != "X" ]; then
+                printf "# %s\n" "$file"
+                old_vers=$(expr "$vers" : "${STRING_BASE}=\"\([0-9\.]*\)\"")
+                if [ "X$old_vers" = "X" ]; then
+                    printf "# unable to get version\n"
+                elif [ "X$version" = "X$old_vers" ]; then
+                    printf "# versions are the same: old $old_vers == new $version\n"
+                else
+                    printf "# versions differ: old $old_vers -> new $version\n"
+                fi
+            fi
+            ;;
+        print)
+            vers=$(egrep -n "$REGEXP" "$file")
+            if [ "X$vers" != "X" ]; then
+                printf "# %s\n" "$file"
+                printf "%s\n" "$vers"
+            fi
+            ;;
+        update)
+            if [ $(egrep -c "$REGEXP" "$file") -gt 0 ]; then
+                today=$(date '+%Y-%m-%d')
+                if [ $dry_run -eq 0 ]; then
+                    sed \
+                        -e 's@^\(# .*updated: \)[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\(.*\)$@\1'"${today}"'\2@' \
+                        -e "s@\($STRING_BASE=\)\(\"[0-9\.][0-9\.]*\"\)@\1\"$version\"@g" \
+                        -e "s@^\(VERSION=\)\(\"[0-9\.][0-9\.]*\"\)@\1\"\$${STRING_BASE}\"@g" \
+                        "$file" > "$tmpfile" && cat "$tmpfile" > "$file" \
+                        && printf "# updated: %s\n" "$file"
+                else
+                    echo sed \
+                        -e 's@^\(# .*updated: \)[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\(.*\)$@\1'"${today}"'\2@' \
+                        -e "s@\($STRING_BASE=\)\(\"[0-9\.][0-9\.]*\"\)@\1\"$version\"@g" \
+                        -e "s@^\(VERSION=\)\(\"[0-9\.][0-9\.]*\"\)@\1\"\$${STRING_BASE}\"@g" \
+                        "$file" \> tmpfile
+                fi
+            fi
+            ;;
+        *)
+            error "Unknown operation: $op"
+            ;;
+    esac
+
+done
+
+exit
