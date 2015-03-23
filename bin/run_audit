@@ -20,11 +20,12 @@ mydir="${PWD%/}"
 cd "$current_wd"
 ########################################################################
 
+AUDIT_SCRIPTS_VERSION="0.3.9"
+VERSION="$AUDit_SCRIPTS_VERSION"
+AUTHORS="Kevin Chan <kefin@makedostudio.com>"
+
 ########################################################################
 # helper functions
-
-VERSION="0.3.8"
-AUTHORS="Kevin Chan <kefin@makedostudio.com>"
 
 show_version()
 {

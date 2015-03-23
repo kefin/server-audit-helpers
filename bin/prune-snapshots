@@ -4,7 +4,7 @@
 # * delete obsolete audit archive reports.
 #
 # * created: 2014-11-15 Kevin Chan <kefin@makedostudio.com>
-# * updated: 2014-11-15 kchan
+# * updated: 2015-03-22 kchan
 
 ########################################################################
 myname="${0##*/}"
@@ -16,6 +16,10 @@ cd "$current_wd"
 
 ########################################################################
 # load common code
+
+AUDIT_SCRIPTS_VERSION="0.3.9"
+VERSION="$AUDit_SCRIPTS_VERSION"
+AUTHORS="Kevin Chan <kefin@makedostudio.com>"
 
 AUDIT_COMMON="${mydir}/_common"
 if [ ! -f "$AUDIT_COMMON" ]; then
