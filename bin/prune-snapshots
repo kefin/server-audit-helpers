@@ -18,7 +18,7 @@ cd "$current_wd"
 # load common code
 
 AUDIT_SCRIPTS_VERSION="0.3.9"
-VERSION="$AUDit_SCRIPTS_VERSION"
+VERSION="$AUDIT_SCRIPTS_VERSION"
 AUTHORS="Kevin Chan <kefin@makedostudio.com>"
 
 AUDIT_COMMON="${mydir}/_common"
